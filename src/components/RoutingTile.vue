@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import MapButton from './ui/MapButton.vue'
-import MapInput from './ui/MapInput.vue'
+import MapButton from '@/components/ui/MapButton.vue'
+import MapInput from '@/components/ui/MapInput.vue'
 
 const startLocation = ref('')
 const endLocation = ref('')
