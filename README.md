@@ -1,73 +1,142 @@
-# a-better-way
+# A Better Way
 
-This template should help get you started developing with Vue 3 in Vite.
+I got tired of navigation apps telling me the “fastest” route and then dumping me straight into traffic hell.
 
-## Recommended IDE Setup
+You know the ones:
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Stop-and-go highways
+- Sitting on the clutch
+- Coolant temps creeping up
+- That one unprotected left turn that _always_ backs up
 
-## Recommended Browser Setup
+**A Better Way** isn’t about getting there as fast as possible.
+It’s about getting there without hating the drive.
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+---
 
-## Type Support for `.vue` Imports in TS
+## The Idea
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+Most maps apps ask:
 
-## Customize configuration
+> “What’s the fastest route from A to B?”
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+This asks:
 
-## Project Setup
+> “What’s the easiest route that doesn’t suck?”
 
-```sh
-pnpm install
-```
+I’m totally fine if a route takes longer **as long as I’m actually moving**.
 
-### Compile and Hot-Reload for Development
+No traffic, fewer stops, fewer sketchy turns — even if it adds time.
 
-```sh
-pnpm dev
-```
+---
 
-### Type-Check, Compile and Minify for Production
+## What That Actually Means
 
-```sh
-pnpm build
-```
+Let’s say you’re going from A to B.
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+- **Route A**
+  - 15 minutes with no traffic
+  - 30 minutes once it backs up
+  - Highway, stop-and-go, constant braking
+- **Route B**
+  - 45 minutes
+  - Basically no traffic
+  - Back roads, steady pace, predictable
 
-```sh
-pnpm test:unit
-```
+Every normal nav app picks Route A.
 
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
+**A Better Way picks Route B.**
+Because sitting still is worse than driving longer.
 
-```sh
-# Install browsers for the first run
-npx playwright install
+---
 
-# When testing on CI, must build the project first
-pnpm build
+## Why I Care (and Maybe You Do Too)
 
-# Runs the end-to-end tests
-pnpm test:e2e
-# Runs the tests only on Chromium
-pnpm test:e2e --project=chromium
-# Runs the tests of a specific file
-pnpm test:e2e tests/example.spec.ts
-# Runs the tests in debug mode
-pnpm test:e2e --debug
-```
+This is especially nice if you:
 
-### Lint with [ESLint](https://eslint.org/)
+- Drive manual
+- Drive something fast, loud, or modified
+- Care about temps, clutch wear, or just not being stressed
+- Would rather cruise than fight traffic
 
-```sh
-pnpm lint
-```
+High-performance cars don’t love traffic.
+Neither do I.
+
+---
+
+## How Routing Is Different
+
+This isn’t magic — it’s just different priorities.
+
+### Keeps You Moving
+
+- Tries to avoid stop-and-go
+- Prefers roads with steady flow
+
+### Avoids Bad Left Turns
+
+- Unprotected lefts at stop signs suck
+- They stack cars, waste time, and kill momentum
+- Right turns are usually quicker and smoother, so it favors those
+
+### Highways Aren’t Mandatory
+
+- If the highway’s clogged, it’ll route around it
+- Back roads are fair game if they flow better
+
+### Easier on the Car
+
+- Less idling
+- Less heat soak
+- More airflow, happier engine
+
+---
+
+## Time Isn’t Sacred Here
+
+You get to choose how flexible you want to be.
+
+- **Close to fastest** – don’t go too far out of the way
+- **Balanced** – trade some time for less traffic
+- **Avoid traffic at all costs** – just let me drive
+
+If a route is longer but clearly easier, the app isn’t afraid to pick it.
+
+---
+
+## Sharing the “Better Way”
+
+If you ignore the route and do your own thing — that’s kind of the point.
+
+At the end of the drive, it asks:
+
+> **“Want to share your better way?”**
+
+You can submit:
+
+- Back roads locals actually use
+- Turns everyone avoids
+- Intersections that always clog
+- Routes that never show up as “fast” but always work
+
+No usernames. No clout.
+Just real driver knowledge helping other drivers.
+
+---
+
+## What This Is Not
+
+- Not trying to win ETA benchmarks
+- Not built for delivery drivers on a stopwatch
+- Not trying to replace Google Maps or Waze
+
+This is for people who care how the drive feels, not just when it ends.
+
+---
+
+## Why This Exists
+
+Because sometimes the fastest route is miserable.
+
+And sometimes the better route is just…
+**a better way**.
