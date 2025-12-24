@@ -15,12 +15,5 @@ onMounted(() => {
 </script>
 
 <template>
-  <div ref="mapContainer" class="map-container"></div>
+  <div ref="mapContainer" class="h-full w-full"></div>
 </template>
-
-<style scoped>
-.map-container {
-  width: 100%;
-  height: 100%;
-}
-</style>

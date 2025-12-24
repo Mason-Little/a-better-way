@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-
+import './index.css'
 
 import { TomTomConfig } from '@tomtom-org/maps-sdk/core'
 

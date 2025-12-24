@@ -4,27 +4,10 @@ import RoutingTile from '../components/RoutingTile.vue'
 </script>
 
 <template>
-  <main class="home-view">
+  <main class="relative h-screen w-screen">
     <MapContainer />
-    <div class="routing-overlay">
+    <div class="absolute top-4 left-4 z-10 w-full max-w-[400px]">
       <RoutingTile />
     </div>
   </main>
 </template>
-
-<style scoped>
-.home-view {
-  width: 100vw;
-  height: 100vh;
-  position: relative;
-}
-
-.routing-overlay {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  z-index: 10;
-  width: 100%;
-  max-width: 400px;
-}
-</style>

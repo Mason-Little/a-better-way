@@ -12,9 +12,9 @@ const handleRoute = () => {
 </script>
 
 <template>
-  <div class="routing-tile">
-    <h2 class="tile-title">Get Directions</h2>
-    <div class="tile-content">
+  <div class="w-full max-w-[400px] rounded-xl bg-white p-6 shadow-lg">
+    <h2 class="mt-0 mb-6 text-xl font-semibold text-gray-900">Get Directions</h2>
+    <div class="flex flex-col gap-4">
       <MapInput
         v-model="startLocation"
         label="Start Location"
@@ -29,41 +29,9 @@ const handleRoute = () => {
         id="end-location"
       />
 
-      <MapButton variant="primary" @click="handleRoute" class="route-button">
+      <MapButton variant="primary" @click="handleRoute" class="mt-2 w-full">
         Get Directions
       </MapButton>
     </div>
   </div>
 </template>
-
-<style scoped>
-.routing-tile {
-  background-color: white;
-  border-radius: 12px;
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 400px;
-}
-
-.tile-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 1.5rem;
-  margin-top: 0;
-}
-
-.tile-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.route-button {
-  margin-top: 0.5rem;
-  width: 100%;
-}
-</style>
