@@ -1,16 +1,29 @@
 <script setup lang="ts">
-import { TomTomMap } from '@tomtom-org/maps-sdk/map'
+import { TomTomMap, RoutingModule } from '@tomtom-org/maps-sdk/map'
+import type { Route } from '@tomtom-org/maps-sdk/core'
 import { onMounted, ref, shallowRef } from 'vue'
 
 const mapContainer = ref<HTMLDivElement | null>(null)
 const mapInstance = shallowRef<TomTomMap | null>(null)
+const routingModule = shallowRef<RoutingModule | null>(null)
 
-onMounted(() => {
+const drawRoute = (route: Route) => {
+  if (!routingModule.value) return
+  routingModule.value.showRoutes(route)
+}
+
+onMounted(async () => {
   if (!mapContainer.value) return
 
   mapInstance.value = new TomTomMap({
     container: mapContainer.value,
   })
+
+  routingModule.value = await RoutingModule.get(mapInstance.value)
+})
+
+defineExpose({
+  drawRoute,
 })
 </script>
 

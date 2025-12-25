@@ -3,34 +3,54 @@ import { ref } from 'vue'
 import MapButton from '@/components/ui/MapButton.vue'
 import MapInput from '@/components/ui/MapInput.vue'
 import { searchAddress } from '@/utils/search'
+import { getRoute } from '@/utils/routing'
 import type { SearchOption } from '@/types/search'
+import type { Route } from '@tomtom-org/maps-sdk/core'
+
+const emit = defineEmits<{
+  (e: 'route-calculated', route: Route): void
+}>()
 
 const startLocation = ref('')
 const endLocation = ref('')
 const startLocationOptions = ref<SearchOption[]>([])
 const endLocationOptions = ref<SearchOption[]>([])
+const startCoordinates = ref<[number, number] | null>(null)
+const endCoordinates = ref<[number, number] | null>(null)
 
-const handleRoute = () => {
-  console.log('Routing from', startLocation.value, 'to', endLocation.value)
+const handleRoute = async () => {
+  if (!startCoordinates.value || !endCoordinates.value) {
+    console.warn('Start or end coordinates missing')
+    return
+  }
+
+  const route = await getRoute(startCoordinates.value, endCoordinates.value)
+  if (route) {
+    emit('route-calculated', route)
+  }
 }
 
 const handleStartLocationChange = async (value: string) => {
   startLocation.value = value
+  startCoordinates.value = null // Reset coordinates on input change
   startLocationOptions.value = await searchAddress(value)
 }
 
 const handleEndLocationChange = async (value: string) => {
   endLocation.value = value
+  endCoordinates.value = null // Reset coordinates on input change
   endLocationOptions.value = await searchAddress(value)
 }
 
 const handleStartOptionSelect = (option: SearchOption) => {
   startLocation.value = option.label
+  startCoordinates.value = option.coordinates
   startLocationOptions.value = []
 }
 
 const handleEndOptionSelect = (option: SearchOption) => {
   endLocation.value = option.label
+  endCoordinates.value = option.coordinates
   endLocationOptions.value = []
 }
 </script>
