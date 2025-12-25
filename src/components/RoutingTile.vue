@@ -2,12 +2,36 @@
 import { ref } from 'vue'
 import MapButton from '@/components/ui/MapButton.vue'
 import MapInput from '@/components/ui/MapInput.vue'
+import { searchAddress } from '@/utils/search'
+import type { SearchOption } from '@/types/search'
 
 const startLocation = ref('')
 const endLocation = ref('')
+const startLocationOptions = ref<SearchOption[]>([])
+const endLocationOptions = ref<SearchOption[]>([])
 
 const handleRoute = () => {
   console.log('Routing from', startLocation.value, 'to', endLocation.value)
+}
+
+const handleStartLocationChange = async (value: string) => {
+  startLocation.value = value
+  startLocationOptions.value = await searchAddress(value)
+}
+
+const handleEndLocationChange = async (value: string) => {
+  endLocation.value = value
+  endLocationOptions.value = await searchAddress(value)
+}
+
+const handleStartOptionSelect = (option: SearchOption) => {
+  startLocation.value = option.label
+  startLocationOptions.value = []
+}
+
+const handleEndOptionSelect = (option: SearchOption) => {
+  endLocation.value = option.label
+  endLocationOptions.value = []
 }
 </script>
 
@@ -20,6 +44,9 @@ const handleRoute = () => {
         label="Start Location"
         placeholder="Enter start location"
         id="start-location"
+        @update:modelValue="handleStartLocationChange"
+        :options="startLocationOptions"
+        @select="handleStartOptionSelect"
       />
 
       <MapInput
@@ -27,6 +54,9 @@ const handleRoute = () => {
         label="Destination"
         placeholder="Enter destination"
         id="end-location"
+        @update:modelValue="handleEndLocationChange"
+        :options="endLocationOptions"
+        @select="handleEndOptionSelect"
       />
 
       <MapButton variant="primary" @click="handleRoute" class="mt-2 w-full">
