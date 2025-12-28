@@ -8,7 +8,7 @@ import type { SearchOption } from '@/types/search'
 import type { Route } from '@tomtom-org/maps-sdk/core'
 
 const emit = defineEmits<{
-  (e: 'route-calculated', route: Route): void
+  routesCalculated: [routes: Route[]]
 }>()
 
 const startLocation = ref('')
@@ -17,6 +17,7 @@ const startLocationOptions = ref<SearchOption[]>([])
 const endLocationOptions = ref<SearchOption[]>([])
 const startCoordinates = ref<[number, number] | null>(null)
 const endCoordinates = ref<[number, number] | null>(null)
+const isLoading = ref(false)
 
 const handleRoute = async () => {
   if (!startCoordinates.value || !endCoordinates.value) {
@@ -24,9 +25,15 @@ const handleRoute = async () => {
     return
   }
 
-  const route = await getRoute(startCoordinates.value, endCoordinates.value)
-  if (route) {
-    emit('route-calculated', route)
+  isLoading.value = true
+
+  try {
+    const routes = await getRoute(startCoordinates.value, endCoordinates.value)
+    if (routes.length > 0) {
+      emit('routesCalculated', routes)
+    }
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -79,8 +86,8 @@ const handleEndOptionSelect = (option: SearchOption) => {
         @select="handleEndOptionSelect"
       />
 
-      <MapButton variant="primary" @click="handleRoute" class="mt-2 w-full">
-        Get Directions
+      <MapButton variant="primary" @click="handleRoute" :disabled="isLoading" class="mt-2 w-full">
+        {{ isLoading ? 'Finding Routes...' : 'Get Directions' }}
       </MapButton>
     </div>
   </div>

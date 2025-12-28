@@ -6,10 +6,9 @@ type AvoidRectangle = {
   northEastCorner: { latitude: number; longitude: number }
 }
 
-type RoutesCallback = (routes: Route[]) => void
-
-const TARGET_ROUTE_COUNT = 10
+const MAX_ROUTE_COUNT = 10
 const ALTERNATIVES_PER_REQUEST = 5
+const MAX_BATCHES = 5
 
 /**
  * Check if a route has zero traffic delays.
@@ -19,18 +18,46 @@ function hasNoDelays(route: Route): boolean {
 }
 
 /**
+ * Process a batch of routes, collecting them and extracting traffic rectangles.
+ * Returns the updated state.
+ */
+function processBatch(
+  routes: Route[],
+  collectedRoutes: Route[],
+  accumulatedRectangles: AvoidRectangle[],
+  maxCount: number
+): { routes: Route[]; rectangles: AvoidRectangle[]; foundNoDelay: boolean } {
+  const newRoutes: Route[] = []
+  const newRectangles: AvoidRectangle[] = []
+  const hasFoundNoDelay = routes.some((route) => route && hasNoDelays(route))
+
+  for (const route of routes) {
+    if (!route || collectedRoutes.length + newRoutes.length >= maxCount) break
+
+    newRoutes.push(route)
+
+    if (!hasNoDelays(route)) {
+      const rectangles = extractTrafficRectangles(route.geometry, route.properties)
+      newRectangles.push(...rectangles)
+    }
+  }
+
+  return {
+    routes: [...collectedRoutes, ...newRoutes],
+    rectangles: [...accumulatedRectangles, ...newRectangles],
+    foundNoDelay: hasFoundNoDelay,
+  }
+}
+
+/**
  * Get multiple route alternatives by batching requests.
- * Requests 5 alternatives per call, accumulating avoid areas from traffic sections,
- * until we have 10 total unique routes.
+ * Requests 5 alternatives per call, accumulating avoid areas from traffic sections.
+ * Returns when either MAX_ROUTE_COUNT routes are collected or a route with no delay is found.
  */
 export async function getRoute(
   start: [number, number],
-  end: [number, number],
-  onAllRoutesUpdate?: RoutesCallback
-): Promise<Route | undefined> {
-  const collectedRoutes: Route[] = []
-  const accumulatedRectangles: AvoidRectangle[] = []
-
+  end: [number, number]
+): Promise<Route[]> {
   try {
     // First batch - get initial 5 alternatives using SDK
     const response = await calculateRoute({
@@ -40,84 +67,62 @@ export async function getRoute(
     })
 
     if (!response.features || response.features.length === 0) {
-      return undefined
+      return []
     }
 
-    // Add all routes from first batch
-    let foundZeroDelayRoute = false
-    for (const route of response.features) {
-      if (route) {
-        collectedRoutes.push(route)
+    const initialState = processBatch(response.features, [], [], MAX_ROUTE_COUNT)
 
-        // Check if this route has no delays
-        if (hasNoDelays(route)) {
-          foundZeroDelayRoute = true
-          break
-        }
-
-        // Extract traffic rectangles from this route
-        const rectangles = extractTrafficRectangles(route.geometry, route.properties)
-        accumulatedRectangles.push(...rectangles)
-      }
+    if (initialState.foundNoDelay) {
+      return initialState.routes
     }
 
-    // Notify about all routes so far
-    if (onAllRoutesUpdate) {
-      onAllRoutesUpdate([...collectedRoutes])
-    }
-
-    // Continue fetching batches until we have TARGET_ROUTE_COUNT routes or find a zero-delay route
-    let batchNumber = 2
-    while (!foundZeroDelayRoute && collectedRoutes.length < TARGET_ROUTE_COUNT && accumulatedRectangles.length > 0) {
-      // Wait a bit between batches
-      await delay(1000)
-
-      const newRoutes = await fetchRoutesWithAvoidAreas(
-        start,
-        end,
-        accumulatedRectangles,
-        collectedRoutes[0]! // Use first route as template (guaranteed to exist)
-      )
-
-      if (newRoutes.length === 0) {
-        break
-      }
-
-      for (const route of newRoutes) {
-        // Check if we already have enough
-        if (collectedRoutes.length >= TARGET_ROUTE_COUNT) break
-
-        collectedRoutes.push(route)
-
-        // Check if this route has no delays
-        if (hasNoDelays(route)) {
-          foundZeroDelayRoute = true
-          break
-        }
-
-        // Extract more traffic rectangles
-        const rectangles = extractTrafficRectangles(route.geometry, route.properties)
-        accumulatedRectangles.push(...rectangles)
-      }
-
-      // Notify about all routes
-      if (onAllRoutesUpdate) {
-        onAllRoutesUpdate([...collectedRoutes])
-      }
-
-      batchNumber++
-
-      // Safety limit on batches
-      if (batchNumber > 5) {
-        break
-      }
-    }
-
-    return collectedRoutes[0]
+    // Recursively fetch more batches
+    return fetchMoreBatches(start, end, initialState.routes, initialState.rectangles, 1)
   } catch (error) {
     console.error('Failed to calculate route:', error)
+    return []
   }
-  return undefined
+}
+
+/**
+ * Recursively fetch more route batches until we hit limits or find a no-delay route.
+ */
+async function fetchMoreBatches(
+  start: [number, number],
+  end: [number, number],
+  collectedRoutes: Route[],
+  accumulatedRectangles: AvoidRectangle[],
+  batchCount: number
+): Promise<Route[]> {
+  // Check termination conditions
+  if (
+    collectedRoutes.length >= MAX_ROUTE_COUNT ||
+    accumulatedRectangles.length === 0 ||
+    batchCount >= MAX_BATCHES
+  ) {
+    return collectedRoutes
+  }
+
+  await delay(1000)
+
+  const newRoutes = await fetchRoutesWithAvoidAreas(
+    start,
+    end,
+    accumulatedRectangles,
+    collectedRoutes[0]!
+  )
+
+  if (newRoutes.length === 0) {
+    return collectedRoutes
+  }
+
+  const state = processBatch(newRoutes, collectedRoutes, accumulatedRectangles, MAX_ROUTE_COUNT)
+
+  if (state.foundNoDelay) {
+    return state.routes
+  }
+
+  return fetchMoreBatches(start, end, state.routes, state.rectangles, batchCount + 1)
 }
 
 /**

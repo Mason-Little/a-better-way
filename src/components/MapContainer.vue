@@ -9,6 +9,8 @@ const routingModule = shallowRef<RoutingModule | null>(null)
 
 const drawRoute = (route: Route) => {
   if (!routingModule.value) return
+  // Clear existing routes and draw the new one
+  routingModule.value.clearRoutes()
   routingModule.value.showRoutes(route)
 }
 
