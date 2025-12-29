@@ -1,1 +1,22 @@
 @import 'tailwindcss';
+
+/* Prevent mobile browser behaviors that interfere with map interaction */
+html, body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* Prevent text selection on UI elements */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Safe area insets for notched devices */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}

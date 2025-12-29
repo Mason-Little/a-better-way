@@ -48,7 +48,7 @@ watch(
 </script>
 
 <template>
-  <div class="w-full rounded-xl bg-white p-4 shadow-lg">
+  <div class="w-full rounded-xl bg-white p-3 shadow-lg sm:p-4">
     <!-- Header -->
     <div class="mb-4 flex items-center justify-between">
       <h3 class="text-sm font-semibold text-gray-700">

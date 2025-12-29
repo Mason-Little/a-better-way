@@ -63,8 +63,8 @@ const handleEndOptionSelect = (option: SearchOption) => {
 </script>
 
 <template>
-  <div class="w-full max-w-[400px] rounded-xl bg-white p-6 shadow-lg">
-    <h2 class="mt-0 mb-6 text-xl font-semibold text-gray-900">Get Directions</h2>
+  <div class="w-full rounded-xl bg-white p-4 shadow-lg sm:p-6">
+    <h2 class="mt-0 mb-4 text-lg font-semibold text-gray-900 sm:mb-6 sm:text-xl">Get Directions</h2>
     <div class="flex flex-col gap-4">
       <MapInput
         v-model="startLocation"
