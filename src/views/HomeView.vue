@@ -1,25 +1,33 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import MapContainer from '../components/MapContainer.vue'
 import RoutingTile from '../components/RoutingTile.vue'
 import RouteCarousel from '../components/RouteCarousel.vue'
 import MobileSidebar from '../components/MobileSidebar.vue'
 import HamburgerButton from '../components/ui/HamburgerButton.vue'
+import NavigationPanel from '../components/NavigationPanel.vue'
 import type { Route } from '@tomtom-org/maps-sdk/core'
+import { NavigationSession, type NavigationState } from '@/services/NavigationSession'
+import type { LocationError } from '@/services/LocationTracker'
 
 const mapRef = ref<InstanceType<typeof MapContainer> | null>(null)
 const routes = ref<Route[]>([])
 const selectedRouteIndex = ref(0)
 const sidebarOpen = ref(false)
+const navContainer = ref<HTMLElement | null>(null)
+
+// Navigation state
+const isNavigating = ref(false)
+const navSession = ref<NavigationSession | null>(null)
+const navState = ref<NavigationState | null>(null)
+const navError = ref<LocationError | null>(null)
 
 const handleRoutesCalculated = (calculatedRoutes: Route[]) => {
   routes.value = calculatedRoutes
   selectedRouteIndex.value = 0
-  // Draw the first route
   if (calculatedRoutes.length > 0) {
     mapRef.value?.drawRoute(calculatedRoutes[0]!)
   }
-  // Close sidebar after getting routes on mobile
   sidebarOpen.value = false
 }
 
@@ -30,14 +38,47 @@ const handleRouteSelect = (index: number) => {
     mapRef.value?.drawRoute(selectedRoute)
   }
 }
+
+const startNavigation = () => {
+  const map = mapRef.value?.getMap()
+  if (!map) {
+    console.error('[HomeView] Map not ready')
+    return
+  }
+
+  navError.value = null
+  navSession.value = new NavigationSession({
+    map,
+    container: navContainer.value!,
+    onStateUpdate: (state) => {
+      navState.value = state
+    },
+    onError: (error) => {
+      navError.value = error
+    },
+  })
+  navSession.value.start()
+  isNavigating.value = true
+}
+
+const stopNavigation = () => {
+  navSession.value?.stop()
+  navSession.value = null
+  navState.value = null
+  isNavigating.value = false
+}
+
+onUnmounted(() => {
+  navSession.value?.stop()
+})
 </script>
 
 <template>
-  <main class="relative h-screen w-screen">
+  <main ref="navContainer" class="relative h-screen w-screen">
     <MapContainer ref="mapRef" />
 
-    <!-- Mobile: Hamburger button -->
-    <div class="safe-top absolute left-3 top-3 z-10 sm:hidden">
+    <!-- Mobile: Top buttons -->
+    <div class="safe-top absolute left-3 top-3 z-10 flex gap-2 sm:hidden">
       <HamburgerButton @click="sidebarOpen = true" />
     </div>
 
@@ -64,5 +105,15 @@ const handleRouteSelect = (index: number) => {
         @select="handleRouteSelect"
       />
     </div>
+
+    <!-- Navigation controls -->
+    <NavigationPanel
+      v-if="routes.length > 0"
+      :is-navigating="isNavigating"
+      :state="navState"
+      :error="navError"
+      @start="startNavigation"
+      @stop="stopNavigation"
+    />
   </main>
 </template>
