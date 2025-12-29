@@ -1,43 +1,90 @@
-import { calculateRoute } from '@tomtom-org/maps-sdk/services'
-import type { Route } from '@tomtom-org/maps-sdk/core'
+/**
+ * Route calculation with traffic avoidance
+ * Uses our custom TomTom SDK wrapper
+ */
 
-type AvoidRectangle = {
-  southWestCorner: { latitude: number; longitude: number }
-  northEastCorner: { latitude: number; longitude: number }
-}
+import type { Route } from '@tomtom-org/maps-sdk/core'
+import TomTom, {
+  type AvoidRectangle,
+  type Coordinate,
+  type OrbisRoute,
+} from './tomtom'
 
 const MAX_ROUTE_COUNT = 10
 const ALTERNATIVES_PER_REQUEST = 5
 const MAX_BATCHES = 5
 
 /**
- * Check if a route has zero traffic delays.
+ * Convert our SDK route format to TomTom Maps SDK Route format
+ * (needed for RoutingModule.showRoutes())
  */
-function hasNoDelays(route: Route): boolean {
-  return route.properties.summary.trafficDelayInSeconds === 0
+function toSdkRoute(route: OrbisRoute, index: number): Route {
+  const coordinates = TomTom.getRouteCoordinates(route).map(
+    (c) => [c.longitude, c.latitude] as [number, number]
+  )
+
+  const trafficSections = TomTom.getTrafficSections(route).map((s) => ({
+    startPointIndex: s.startPointIndex,
+    endPointIndex: s.endPointIndex,
+    delayInSeconds: s.delayInSeconds,
+    magnitudeOfDelay: s.magnitudeOfDelay,
+    simpleCategory: s.simpleCategory,
+    effectiveSpeedInKmh: s.effectiveSpeedInKmh,
+  }))
+
+  const legSections = [
+    {
+      startPointIndex: 0,
+      endPointIndex: Math.max(0, coordinates.length - 1),
+      sectionType: 'LEG',
+      travelMode: 'car',
+    },
+  ]
+
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'LineString',
+      coordinates,
+    },
+    properties: {
+      summary: {
+        lengthInMeters: route.summary?.lengthInMeters ?? 0,
+        travelTimeInSeconds: route.summary?.travelTimeInSeconds ?? 0,
+        trafficDelayInSeconds: route.summary?.trafficDelayInSeconds ?? 0,
+        trafficLengthInMeters: route.summary?.trafficLengthInMeters ?? 0,
+        departureTime: route.summary?.departureTime,
+        arrivalTime: route.summary?.arrivalTime,
+      },
+      sections: {
+        traffic: trafficSections,
+        leg: legSections,
+      },
+      index,
+    },
+  } as unknown as Route
 }
 
 /**
- * Process a batch of routes, collecting them and extracting traffic rectangles.
- * Returns the updated state.
+ * Process a batch of routes, collecting them and extracting traffic rectangles
  */
 function processBatch(
-  routes: Route[],
-  collectedRoutes: Route[],
+  routes: OrbisRoute[],
+  collectedRoutes: OrbisRoute[],
   accumulatedRectangles: AvoidRectangle[],
   maxCount: number
-): { routes: Route[]; rectangles: AvoidRectangle[]; foundNoDelay: boolean } {
-  const newRoutes: Route[] = []
+): { routes: OrbisRoute[]; rectangles: AvoidRectangle[]; foundNoDelay: boolean } {
+  const newRoutes: OrbisRoute[] = []
   const newRectangles: AvoidRectangle[] = []
-  const hasFoundNoDelay = routes.some((route) => route && hasNoDelays(route))
+  const hasFoundNoDelay = routes.some((route) => route && !TomTom.hasTrafficDelays(route))
 
   for (const route of routes) {
     if (!route || collectedRoutes.length + newRoutes.length >= maxCount) break
 
     newRoutes.push(route)
 
-    if (!hasNoDelays(route)) {
-      const rectangles = extractTrafficRectangles(route.geometry, route.properties)
+    if (TomTom.hasTrafficDelays(route)) {
+      const rectangles = TomTom.createAvoidRectanglesFromTraffic(route)
       newRectangles.push(...rectangles)
     }
   }
@@ -49,52 +96,20 @@ function processBatch(
   }
 }
 
-/**
- * Get multiple route alternatives by batching requests.
- * Requests 5 alternatives per call, accumulating avoid areas from traffic sections.
- * Returns when either MAX_ROUTE_COUNT routes are collected or a route with no delay is found.
- */
-export async function getRoute(
-  start: [number, number],
-  end: [number, number]
-): Promise<Route[]> {
-  try {
-    // First batch - get initial 5 alternatives using SDK
-    const response = await calculateRoute({
-      apiKey: import.meta.env.VITE_TOM_TOM_KEY,
-      locations: [start, end],
-      maxAlternatives: ALTERNATIVES_PER_REQUEST,
-    })
-
-    if (!response.features || response.features.length === 0) {
-      return []
-    }
-
-    const initialState = processBatch(response.features, [], [], MAX_ROUTE_COUNT)
-
-    if (initialState.foundNoDelay) {
-      return initialState.routes
-    }
-
-    // Recursively fetch more batches
-    return fetchMoreBatches(start, end, initialState.routes, initialState.rectangles, 1)
-  } catch (error) {
-    console.error('Failed to calculate route:', error)
-    return []
-  }
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
- * Recursively fetch more route batches until we hit limits or find a no-delay route.
+ * Recursively fetch more route batches until we hit limits or find a no-delay route
  */
 async function fetchMoreBatches(
-  start: [number, number],
-  end: [number, number],
-  collectedRoutes: Route[],
+  start: Coordinate,
+  end: Coordinate,
+  collectedRoutes: OrbisRoute[],
   accumulatedRectangles: AvoidRectangle[],
   batchCount: number
-): Promise<Route[]> {
-  // Check termination conditions
+): Promise<OrbisRoute[]> {
   if (
     collectedRoutes.length >= MAX_ROUTE_COUNT ||
     accumulatedRectangles.length === 0 ||
@@ -105,12 +120,13 @@ async function fetchMoreBatches(
 
   await delay(1000)
 
-  const newRoutes = await fetchRoutesWithAvoidAreas(
-    start,
-    end,
-    accumulatedRectangles,
-    collectedRoutes[0]!
-  )
+  const newRoutes = await TomTom.calculateRoute([start, end], {
+    maxAlternatives: ALTERNATIVES_PER_REQUEST,
+    traffic: 'live',
+    avoidAreas: {
+      rectangles: accumulatedRectangles.slice(0, 10), // API limit
+    },
+  })
 
   if (newRoutes.length === 0) {
     return collectedRoutes
@@ -126,102 +142,47 @@ async function fetchMoreBatches(
 }
 
 /**
- * Fetch routes using direct API with avoid areas.
+ * Get multiple route alternatives by batching requests.
+ * Uses TomTom Orbis API v2 via our custom SDK.
+ * Requests 5 alternatives per call, accumulating avoid areas from traffic sections.
+ * Returns when either MAX_ROUTE_COUNT routes are collected or a route with no delay is found.
  */
-async function fetchRoutesWithAvoidAreas(
-  start: [number, number],
-  end: [number, number],
-  avoidRectangles: AvoidRectangle[],
-  templateRoute: Route
-): Promise<Route[]> {
-  const apiKey = import.meta.env.VITE_TOM_TOM_KEY
-  const locations = `${start[1]},${start[0]}:${end[1]},${end[0]}`
-  const url = `https://api.tomtom.com/routing/1/calculateRoute/${locations}/json?key=${apiKey}&traffic=true&sectionType=traffic&maxAlternatives=${ALTERNATIVES_PER_REQUEST}`
-
+export async function getRoute(start: [number, number], end: [number, number]): Promise<Route[]> {
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        avoidAreas: {
-          rectangles: avoidRectangles.slice(0, 10), // API limit of 10 rectangles
-        },
-      }),
+    const startCoord: Coordinate = { latitude: start[1], longitude: start[0] }
+    const endCoord: Coordinate = { latitude: end[1], longitude: end[0] }
+
+    // First batch - get initial alternatives
+    const initialRoutes = await TomTom.calculateRoute([startCoord, endCoord], {
+      maxAlternatives: ALTERNATIVES_PER_REQUEST,
+      traffic: 'live',
     })
 
-    const data = await res.json()
-
-    if (!data.routes || data.routes.length === 0) {
+    if (initialRoutes.length === 0) {
       return []
     }
 
-    // Convert all routes to SDK format
-    return data.routes.map((apiRoute: any) => convertApiRouteToSdkFormat(apiRoute, templateRoute))
-  } catch {
-    return []
-  }
-}
+    const initialState = processBatch(initialRoutes, [], [], MAX_ROUTE_COUNT)
 
-/**
- * Extract bounding box rectangles from traffic sections.
- */
-function extractTrafficRectangles(
-  geometry: Route['geometry'],
-  properties: Route['properties']
-): AvoidRectangle[] {
-  const rectangles: AvoidRectangle[] = []
+    let allRoutes: OrbisRoute[]
 
-  for (const section of properties.sections.traffic ?? []) {
-    if (!section.delayInSeconds || section.delayInSeconds === 0) {
-      continue
+    if (initialState.foundNoDelay) {
+      allRoutes = initialState.routes
+    } else {
+      // Recursively fetch more batches with avoid areas
+      allRoutes = await fetchMoreBatches(
+        startCoord,
+        endCoord,
+        initialState.routes,
+        initialState.rectangles,
+        1
+      )
     }
 
-    const startCoord = geometry.coordinates[section.startPointIndex] as [number, number]
-    const endCoord = geometry.coordinates[section.endPointIndex] as [number, number]
-
-    // Coordinates are [longitude, latitude] in GeoJSON
-    const minLng = Math.min(startCoord[0], endCoord[0])
-    const maxLng = Math.max(startCoord[0], endCoord[0])
-    const minLat = Math.min(startCoord[1], endCoord[1])
-    const maxLat = Math.max(startCoord[1], endCoord[1])
-
-    // Add small buffer (~100m) to ensure the area is avoided
-    const buffer = 0.001
-
-    rectangles.push({
-      southWestCorner: { latitude: minLat - buffer, longitude: minLng - buffer },
-      northEastCorner: { latitude: maxLat + buffer, longitude: maxLng + buffer },
-    })
+    // Convert to SDK format for RoutingModule compatibility
+    return allRoutes.map((route, index) => toSdkRoute(route, index))
+  } catch (error) {
+    console.error('Failed to calculate route:', error)
+    return []
   }
-
-  return rectangles
-}
-
-/**
- * Convert raw API route to SDK-compatible format.
- */
-function convertApiRouteToSdkFormat(apiRoute: any, templateRoute: Route): Route {
-  return {
-    ...templateRoute,
-    geometry: {
-      type: 'LineString',
-      coordinates:
-        apiRoute.legs?.[0]?.points?.map((p: any) => [p.longitude, p.latitude]) ??
-        templateRoute.geometry.coordinates,
-    },
-    properties: {
-      ...templateRoute.properties,
-      summary: {
-        ...templateRoute.properties.summary,
-        lengthInMeters: apiRoute.summary?.lengthInMeters ?? templateRoute.properties.summary.lengthInMeters,
-        travelTimeInSeconds:
-          apiRoute.summary?.travelTimeInSeconds ?? templateRoute.properties.summary.travelTimeInSeconds,
-        trafficDelayInSeconds: apiRoute.summary?.trafficDelayInSeconds ?? 0,
-      },
-    },
-  }
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
