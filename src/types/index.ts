@@ -1,1 +1,2 @@
-export * from './search'
+// Placeholder for shared types
+export {}

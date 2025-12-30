@@ -20,7 +20,6 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
-    "@tomtom-org/maps-sdk": "^0.38.1",
     "@vueuse/core": "^14.1.0",
     "maplibre-gl": "^5.15.0",
     "pinia": "^3.0.4",

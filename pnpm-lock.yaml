@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@tomtom-org/maps-sdk':
-        specifier: ^0.38.1
-        version: 0.38.1
       '@vueuse/core':
         specifier: ^14.1.0
         version: 14.1.0(vue@3.5.26(typescript@5.9.3))
@@ -1036,10 +1033,6 @@ packages:
     resolution: {integrity: sha512-jVA+/UpKL1vRLg6Hkao5jldawNmRo7mQYrZtNHMIVpLfLhDml5nMRUo/8MwoX2vNXvnaXNNMedrMfMugAVX1nA==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
-
-  '@tomtom-org/maps-sdk@0.38.1':
-    resolution: {integrity: sha512-edYtywJBkJh+8SaAJkVMwO8eKqkL/rI9M1XOdqQtVJ9FOkQ+As4BUJ6s3Yy14S5HMcKwW2dVfTDDXCQ3tehOFg==}
-    engines: {node: '>=24', pnpm: '>=10'}
 
   '@tsconfig/node24@24.0.3':
     resolution: {integrity: sha512-vcERKtKQKHgzt/vfS3Gjasd8SUI2a0WZXpgJURdJsMySpS5+ctgbPfuLj2z/W+w4lAfTWxoN4upKfu2WzIRYnw==}
@@ -3484,8 +3477,6 @@ snapshots:
       '@tailwindcss/oxide': 4.1.18
       tailwindcss: 4.1.18
       vite: rolldown-vite@7.3.0(@types/node@24.10.4)(esbuild@0.27.2)(jiti@2.6.1)
-
-  '@tomtom-org/maps-sdk@0.38.1': {}
 
   '@tsconfig/node24@24.0.3': {}
 

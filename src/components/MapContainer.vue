@@ -1,99 +1,117 @@
 <script setup lang="ts">
-import { TomTomMap, RoutingModule } from '@tomtom-org/maps-sdk/map'
-import type { Route } from '@tomtom-org/maps-sdk/core'
-import { onMounted, ref, shallowRef } from 'vue'
+import { onMounted, onUnmounted, ref, shallowRef } from 'vue'
 
 const mapContainer = ref<HTMLDivElement | null>(null)
-const mapInstance = shallowRef<TomTomMap | null>(null)
-const routingModule = shallowRef<RoutingModule | null>(null)
+const mapInstance = shallowRef<H.Map | null>(null)
+const platform = shallowRef<H.service.Platform | null>(null)
+const behavior = shallowRef<H.mapevents.Behavior | null>(null)
+const ui = shallowRef<H.ui.UI | null>(null)
+const routePolyline = shallowRef<H.map.Polyline | null>(null)
 
-const drawRoute = (route: Route) => {
-  if (!routingModule.value) return
-  routingModule.value.clearRoutes()
-  routingModule.value.showRoutes(route)
-}
+// Squamish, BC coordinates
+const INITIAL_CENTER = { lat: 49.7016, lng: -123.1558 }
+const INITIAL_ZOOM = 12
 
-onMounted(async () => {
-  if (!mapContainer.value) return
+const drawRoute = (coordinates: Array<{ lat: number; lng: number }>) => {
+  if (!mapInstance.value) return
 
-  mapInstance.value = new TomTomMap({
-    container: mapContainer.value,
+  // Clear existing route first
+  clearRoute()
+
+  // Create LineString from coordinates
+  const lineString = new H.geo.LineString()
+  for (const coord of coordinates) {
+    lineString.pushPoint(coord)
+  }
+
+  // Create polyline with styling
+  routePolyline.value = new H.map.Polyline(lineString, {
+    style: {
+      strokeColor: '#2563eb',
+      lineWidth: 5,
+    },
   })
 
-  routingModule.value = await RoutingModule.get(mapInstance.value)
+  mapInstance.value.addObject(routePolyline.value)
+}
+
+const drawRouteFromEncoded = (encodedPolyline: string) => {
+  if (!mapInstance.value) return
+
+  clearRoute()
+
+  const lineString = H.geo.LineString.fromFlexiblePolyline(encodedPolyline)
+  routePolyline.value = new H.map.Polyline(lineString, {
+    style: {
+      strokeColor: '#2563eb',
+      lineWidth: 5,
+    },
+  })
+
+  mapInstance.value.addObject(routePolyline.value)
+}
+
+const clearRoute = () => {
+  if (routePolyline.value && mapInstance.value) {
+    mapInstance.value.removeObject(routePolyline.value)
+    routePolyline.value = null as unknown as H.map.Polyline
+  }
+}
+
+onMounted(() => {
+  if (!mapContainer.value) return
+
+  const apiKey = import.meta.env.VITE_HERE_API_KEY
+  if (!apiKey || apiKey === 'your_here_api_key_here') {
+    console.error('[MapContainer] HERE API key not configured')
+    return
+  }
+
+  // Initialize HERE platform
+  platform.value = new H.service.Platform({ apikey: apiKey })
+  const defaultLayers = platform.value.createDefaultLayers()
+
+  // Initialize map
+  mapInstance.value = new H.Map(mapContainer.value, defaultLayers.vector.normal.map, {
+    center: INITIAL_CENTER,
+    zoom: INITIAL_ZOOM,
+    pixelRatio: window.devicePixelRatio || 1,
+  })
+
+  // Enable map interaction (pan, zoom)
+  const mapEvents = new H.mapevents.MapEvents(mapInstance.value)
+  behavior.value = new H.mapevents.Behavior(mapEvents)
+
+  // Add default UI (zoom buttons, etc.)
+  ui.value = H.ui.UI.createDefault(mapInstance.value, defaultLayers)
+
+  // Handle window resize
+  window.addEventListener('resize', handleResize)
 })
 
-const getMap = () => mapInstance.value
+const handleResize = () => {
+  if (mapInstance.value) {
+    mapInstance.value.getViewModel().setLookAtData({
+      position: mapInstance.value.getCenter(),
+      zoom: mapInstance.value.getZoom(),
+    })
+  }
+}
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  behavior.value?.dispose()
+  ui.value?.dispose()
+  mapInstance.value?.dispose()
+})
 
 defineExpose({
   drawRoute,
-  getMap,
+  drawRouteFromEncoded,
+  clearRoute,
 })
 </script>
 
 <template>
   <div ref="mapContainer" class="h-full w-full"></div>
 </template>
-
-<style>
-/* Navigation puck styles */
-.nav-puck {
-  position: relative;
-  width: 28px;
-  height: 28px;
-}
-
-.puck-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 18px;
-  height: 18px;
-  background: #4285f4;
-  border: 3px solid white;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  z-index: 2;
-}
-
-.puck-pulse {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 44px;
-  height: 44px;
-  background: rgba(66, 133, 244, 0.25);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: puck-pulse 2s ease-out infinite;
-  z-index: 1;
-}
-
-.puck-arrow {
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-bottom: 14px solid #4285f4;
-  transform: translateX(-50%);
-  transform-origin: center 24px;
-  opacity: 0;
-  z-index: 3;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
-}
-
-@keyframes puck-pulse {
-  0% {
-    transform: translate(-50%, -50%) scale(0.5);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2);
-    opacity: 0;
-  }
-}
-</style>

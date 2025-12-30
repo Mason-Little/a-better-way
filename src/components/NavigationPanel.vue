@@ -1,76 +1,73 @@
 <script setup lang="ts">
-import type { NavigationState } from '@/services/NavigationSession'
-import type { LocationError } from '@/services/LocationTracker'
+import { ref, computed } from 'vue'
+import PlaceSearch from './PlaceSearch.vue'
+import type { SearchResult } from '@/lib/here/search'
 
-const { isNavigating, state, error } = defineProps<{
-  isNavigating: boolean
-  state: NavigationState | null
-  error: LocationError | null
+const { isLoading = false } = defineProps<{
+  isLoading?: boolean
 }>()
 
 const emit = defineEmits<{
-  start: []
-  stop: []
+  route: [origin: { lat: number; lng: number }, destination: { lat: number; lng: number }]
+  clear: []
 }>()
 
-const formatSpeed = (kmh: number | null): string => {
-  if (kmh === null) return '—'
-  return `${Math.round(kmh)} km/h`
+const origin = ref<SearchResult | null>(null)
+const destination = ref<SearchResult | null>(null)
+
+const canRoute = computed(() => origin.value && destination.value)
+
+const handleRoute = () => {
+  if (!origin.value || !destination.value) return
+  emit('route', origin.value.position, destination.value.position)
+}
+
+const handleClear = () => {
+  emit('clear')
 }
 </script>
 
 <template>
-  <!-- Go button -->
-  <div
-    v-if="!isNavigating"
-    class="absolute bottom-8 left-4 right-4 z-10 sm:left-auto sm:right-4 sm:w-64"
-  >
-    <button
-      class="w-full rounded-xl bg-blue-500 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-blue-600 active:scale-[0.98]"
-      @click="emit('start')"
-    >
-      Go
-    </button>
-  </div>
+  <div class="absolute bottom-8 left-4 right-4 z-10 sm:left-auto sm:right-4 sm:w-80">
+    <div class="rounded-xl bg-white/95 p-4 shadow-lg backdrop-blur">
+      <h3 class="mb-3 text-sm font-semibold text-gray-700">Route Planner</h3>
 
-  <!-- Navigation panel -->
-  <div v-else class="absolute bottom-8 left-4 right-4 z-10">
-    <!-- Error -->
-    <div
-      v-if="error"
-      class="mb-3 rounded-xl bg-red-500/90 px-4 py-3 text-sm text-white backdrop-blur"
-    >
-      {{ error.message }}
-    </div>
+      <!-- Origin Search -->
+      <div class="mb-3">
+        <PlaceSearch
+          id="origin"
+          v-model="origin"
+          label="Origin"
+          placeholder="e.g. Walmart, Squamish"
+        />
+      </div>
 
-    <!-- Stats -->
-    <div
-      class="flex items-center justify-between rounded-xl bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:bg-gray-900/90"
-    >
-      <div>
-        <div class="text-xs text-gray-500">Speed</div>
-        <div class="text-xl font-semibold dark:text-white">
-          {{ formatSpeed(state?.speedKmh ?? null) }}
-        </div>
+      <!-- Destination Search -->
+      <div class="mb-4">
+        <PlaceSearch
+          id="destination"
+          v-model="destination"
+          label="Destination"
+          placeholder="e.g. Vancouver Airport"
+        />
       </div>
-      <div class="text-center">
-        <div class="text-xs text-gray-500">Accuracy</div>
-        <div class="text-lg dark:text-white">
-          {{ state ? `±${Math.round(state.accuracyM)}m` : '—' }}
-        </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-2">
+        <button
+          class="flex-1 rounded-lg bg-blue-500 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="isLoading || !canRoute"
+          @click="handleRoute"
+        >
+          {{ isLoading ? 'Loading...' : 'Route' }}
+        </button>
+        <button
+          class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200"
+          @click="handleClear"
+        >
+          Clear
+        </button>
       </div>
-      <div class="text-right">
-        <div class="text-xs text-gray-500">Heading</div>
-        <div class="text-lg dark:text-white">
-          {{ state?.headingDeg !== null ? `${Math.round(state?.headingDeg ?? 0)}°` : '—' }}
-        </div>
-      </div>
-      <button
-        class="ml-4 rounded-lg bg-red-500 px-5 py-2 font-medium text-white transition-all hover:bg-red-600"
-        @click="emit('stop')"
-      >
-        Stop
-      </button>
     </div>
   </div>
 </template>

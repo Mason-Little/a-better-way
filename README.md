@@ -1,142 +1,87 @@
 # A Better Way
 
-I got tired of navigation apps telling me the “fastest” route and then dumping me straight into traffic hell.
-
-You know the ones:
-
-- Stop-and-go highways
-- Sitting on the clutch
-- Coolant temps creeping up
-- That one unprotected left turn that _always_ backs up
-
-**A Better Way** isn’t about getting there as fast as possible.
-It’s about getting there without hating the drive.
+A minimal routing application using HERE Platform.
 
 ---
 
-## The Idea
+## About
 
-Most maps apps ask:
-
-> “What’s the fastest route from A to B?”
-
-This asks:
-
-> “What’s the easiest route that doesn’t suck?”
-
-I’m totally fine if a route takes longer **as long as I’m actually moving**.
-
-No traffic, fewer stops, fewer sketchy turns — even if it adds time.
+**A Better Way** is about finding routes that feel good to drive, not just the fastest path. This is a reset baseline that focuses on simplicity.
 
 ---
 
-## What That Actually Means
+## Tech Stack
 
-Let’s say you’re going from A to B.
-
-- **Route A**
-  - 15 minutes with no traffic
-  - 30 minutes once it backs up
-  - Highway, stop-and-go, constant braking
-- **Route B**
-  - 45 minutes
-  - Basically no traffic
-  - Back roads, steady pace, predictable
-
-Every normal nav app picks Route A.
-
-**A Better Way picks Route B.**
-Because sitting still is worse than driving longer.
+- **Frontend**: Vue 3 + TypeScript + Vite
+- **Maps**: HERE Maps API for JavaScript
+- **Routing**: HERE Routing API v8
 
 ---
 
-## Why I Care (and Maybe You Do Too)
+## Setup
 
-This is especially nice if you:
+### Prerequisites
 
-- Drive manual
-- Drive something fast, loud, or modified
-- Care about temps, clutch wear, or just not being stressed
-- Would rather cruise than fight traffic
+- Node.js 20+ or 22+
+- pnpm
+- HERE API Key (get one at [developer.here.com](https://developer.here.com/))
 
-High-performance cars don’t love traffic.
-Neither do I.
+### Installation
 
----
+```bash
+# Clone and install
+pnpm install
 
-## How Routing Is Different
+# Configure environment
+cp .env.example .env
+# Edit .env and add your HERE_API_KEY
+```
 
-This isn’t magic — it’s just different priorities.
+### Development
 
-### Keeps You Moving
+```bash
+pnpm dev
+```
 
-- Tries to avoid stop-and-go
-- Prefers roads with steady flow
+### Build
 
-### Avoids Bad Left Turns
-
-- Unprotected lefts at stop signs suck
-- They stack cars, waste time, and kill momentum
-- Right turns are usually quicker and smoother, so it favors those
-
-### Highways Aren’t Mandatory
-
-- If the highway’s clogged, it’ll route around it
-- Back roads are fair game if they flow better
-
-### Easier on the Car
-
-- Less idling
-- Less heat soak
-- More airflow, happier engine
+```bash
+pnpm build
+```
 
 ---
 
-## Time Isn’t Sacred Here
+## Usage
 
-You get to choose how flexible you want to be.
+1. Open the app in your browser
+2. Enter origin coordinates (lat,lng) in the first input
+3. Enter destination coordinates (lat,lng) in the second input
+4. Click **Route** to display the route polyline
+5. Click **Clear** to remove the route
 
-- **Close to fastest** – don’t go too far out of the way
-- **Balanced** – trade some time for less traffic
-- **Avoid traffic at all costs** – just let me drive
+Default coordinates:
 
-If a route is longer but clearly easier, the app isn’t afraid to pick it.
-
----
-
-## Sharing the “Better Way”
-
-If you ignore the route and do your own thing — that’s kind of the point.
-
-At the end of the drive, it asks:
-
-> **“Want to share your better way?”**
-
-You can submit:
-
-- Back roads locals actually use
-- Turns everyone avoids
-- Intersections that always clog
-- Routes that never show up as “fast” but always work
-
-No usernames. No clout.
-Just real driver knowledge helping other drivers.
+- Origin: Squamish, BC (49.7016,-123.1558)
+- Destination: Vancouver, BC (49.2827,-123.1207)
 
 ---
 
-## What This Is Not
+## What Was Removed
 
-- Not trying to win ETA benchmarks
-- Not built for delivery drivers on a stopwatch
-- Not trying to replace Google Maps or Waze
+> **Note**: Advanced navigation, rerouting, and tracking logic were intentionally removed in this reset.
 
-This is for people who care how the drive feels, not just when it ends.
+This baseline intentionally does not include:
+
+- Location tracking / GPS following
+- Turn-by-turn navigation
+- Route alternatives
+- Traffic avoidance logic
+- Search functionality
+
+These features may be rebuilt in the future on top of this clean foundation.
 
 ---
 
-## Why This Exists
+## License
 
-Because sometimes the fastest route is miserable.
-
-And sometimes the better route is just…
-**a better way**.
+MIT

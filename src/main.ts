@@ -2,12 +2,6 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './index.css'
 
-import { TomTomConfig } from '@tomtom-org/maps-sdk/core'
-
-TomTomConfig.instance.put({
-  apiKey: import.meta.env.VITE_TOM_TOM_KEY,
-})
-
 import App from './App.vue'
 import router from './router'
 
