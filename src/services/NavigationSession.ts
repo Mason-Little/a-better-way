@@ -46,6 +46,7 @@ export class NavigationSession {
   private puckElement: HTMLDivElement | null = null
   private lastCameraUpdate = 0
   private lastPosition: { lat: number; lng: number } | null = null
+  private lastBearing: number = 0
   private onStateUpdate?: (state: NavigationState) => void
   private onError?: (error: LocationError) => void
 
@@ -92,23 +93,25 @@ export class NavigationSession {
     const point = this.glMap.project([update.lng, update.lat])
     this.puckElement.style.transform = `translate(${point.x - 14}px, ${point.y - 14}px)`
 
-    // Update heading indicator
-    const bearing = this.computeBearing(update)
-    if (bearing !== null) {
-      const arrow = this.puckElement.querySelector('.puck-arrow') as HTMLElement
-      if (arrow) {
-        arrow.style.transform = `rotate(${bearing}deg)`
-        arrow.style.opacity = '1'
-      }
+    // Compute bearing - use new bearing or keep last one
+    const newBearing = this.computeBearing(update)
+    if (newBearing !== null) {
+      this.lastBearing = newBearing
     }
 
-    // Throttled camera follow
+    // Arrow always points up since map rotates to match bearing
+    const arrow = this.puckElement.querySelector('.puck-arrow') as HTMLElement
+    if (arrow) {
+      arrow.style.opacity = '1'
+    }
+
+    // Throttled camera follow - rotate map so direction of travel is "up"
     const now = Date.now()
     if (now - this.lastCameraUpdate > CAMERA_THROTTLE_MS) {
       this.lastCameraUpdate = now
       this.glMap.easeTo({
         center: [update.lng, update.lat],
-        bearing: bearing ?? this.glMap.getBearing(),
+        bearing: this.lastBearing,
         pitch: CAMERA_PITCH,
         zoom: CAMERA_ZOOM,
         duration: CAMERA_DURATION_MS,
@@ -121,7 +124,7 @@ export class NavigationSession {
       lng: update.lng,
       accuracyM: update.accuracyM,
       speedKmh: update.speedMps !== null ? update.speedMps * 3.6 : null,
-      headingDeg: bearing,
+      headingDeg: this.lastBearing,
       timestamp: update.timestamp,
     })
 
