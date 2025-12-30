@@ -16,6 +16,7 @@ declare global {
         constructor(options: Platform.Options)
         createDefaultLayers(options?: Platform.DefaultLayersOptions): Platform.DefaultLayers
         getSearchService(): service.SearchService
+        getRoutingService(baseUrl: null, version: 8): service.RoutingService8
       }
 
       namespace Platform {
@@ -64,6 +65,11 @@ declare global {
           onSuccess: (result: SearchService.Result) => void,
           onError: (error: Error) => void
         ): void
+        geocode(
+          params: GeocodingService.Params,
+          onSuccess: (result: GeocodingService.Result) => void,
+          onError: (error: Error) => void
+        ): void
       }
 
       namespace SearchService {
@@ -79,6 +85,76 @@ declare global {
             title: string
             address: {
               label: string
+            }
+            position?: {
+              lat: number
+              lng: number
+            }
+          }>
+        }
+      }
+
+      // Routing Service v8
+      class RoutingService8 {
+        calculateRoute(
+          params: RoutingService8.CalculateRouteParams,
+          onSuccess: (result: unknown) => void,
+          onError: (error: Error) => void
+        ): void
+      }
+
+      namespace RoutingService8 {
+        interface CalculateRouteParams {
+          routingMode: 'fast' | 'short'
+          transportMode: 'car' | 'truck' | 'pedestrian' | 'bicycle' | 'scooter'
+          origin: string
+          destination: string
+          return?: string
+          departureTime?: string
+          alternatives?: number
+          via?: string[]
+          avoid?: {
+            features?: string[]
+            areas?: string[]
+          }
+        }
+      }
+
+      // Geocoding Service
+      class GeocodingService {
+        geocode(
+          params: GeocodingService.Params,
+          onSuccess: (result: GeocodingService.Result) => void,
+          onError: (error: Error) => void
+        ): void
+        reverseGeocode(
+          params: GeocodingService.ReverseParams,
+          onSuccess: (result: GeocodingService.Result) => void,
+          onError: (error: Error) => void
+        ): void
+      }
+
+      namespace GeocodingService {
+        interface Params {
+          q: string
+          limit?: number
+        }
+
+        interface ReverseParams {
+          at: string
+          limit?: number
+        }
+
+        interface Result {
+          items: Array<{
+            title: string
+            id: string
+            address: {
+              label: string
+              city?: string
+              state?: string
+              countryCode?: string
+              postalCode?: string
             }
             position?: {
               lat: number

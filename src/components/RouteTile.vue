@@ -4,6 +4,7 @@ import BetterInput from '@/components/ui/BetterInput.vue'
 import BetterButton from '@/components/ui/BetterButton.vue'
 import { searchPlaces, type SearchResult } from '@/lib/here-sdk/search'
 import BetterDropdown from '@/components/ui/BetterDropdown.vue'
+import { getRoutes } from '@/utils/route'
 
 const startLocation = ref('')
 const endLocation = ref('')
@@ -11,7 +12,7 @@ const startSuggestions = ref<SearchResult[]>([])
 const endSuggestions = ref<SearchResult[]>([])
 
 const handleSearch = () => {
-  console.log('Searching route from', startLocation.value, 'to', endLocation.value)
+  getRoutes(startLocation.value, endLocation.value)
 }
 
 const handleStartSelect = (suggestion: SearchResult) => {
