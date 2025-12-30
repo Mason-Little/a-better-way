@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { watchDebounced } from '@vueuse/core'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import BetterInput from '@/components/ui/BetterInput.vue'
+import BetterButton from '@/components/ui/BetterButton.vue'
 import { searchPlaces, type SearchResult } from '@/lib/here-sdk/search'
+import BetterDropdown from '@/components/ui/BetterDropdown.vue'
 
 const startLocation = ref('')
 const endLocation = ref('')
@@ -14,39 +14,42 @@ const handleSearch = () => {
   console.log('Searching route from', startLocation.value, 'to', endLocation.value)
 }
 
-watchDebounced(
-  startLocation,
-  async (query) => {
-    if (query.length < 2) {
-      startSuggestions.value = []
-      return
-    }
-    try {
-      startSuggestions.value = await searchPlaces(query)
-      console.log('Start suggestions:', startSuggestions.value)
-    } catch (error) {
-      console.error('Search failed:', error)
-    }
-  },
-  { debounce: 300 },
-)
+const handleStartSelect = (suggestion: SearchResult) => {
+  startLocation.value = suggestion.address
+  startSuggestions.value = []
+}
 
-watchDebounced(
-  endLocation,
-  async (query) => {
-    if (query.length < 2) {
-      endSuggestions.value = []
-      return
-    }
-    try {
-      endSuggestions.value = await searchPlaces(query)
-      console.log('End suggestions:', endSuggestions.value)
-    } catch (error) {
-      console.error('Search failed:', error)
-    }
-  },
-  { debounce: 300 },
-)
+const handleEndSelect = (suggestion: SearchResult) => {
+  endLocation.value = suggestion.address
+  endSuggestions.value = []
+}
+
+// Only called on actual user input (not programmatic changes)
+const handleStartSearch = async (query: string) => {
+  if (query.length < 2) {
+    startSuggestions.value = []
+    return
+  }
+  try {
+    startSuggestions.value = await searchPlaces(query)
+    console.log('Start suggestions:', startSuggestions.value)
+  } catch (error) {
+    console.error('Search failed:', error)
+  }
+}
+
+const handleEndSearch = async (query: string) => {
+  if (query.length < 2) {
+    endSuggestions.value = []
+    return
+  }
+  try {
+    endSuggestions.value = await searchPlaces(query)
+    console.log('End suggestions:', endSuggestions.value)
+  } catch (error) {
+    console.error('Search failed:', error)
+  }
+}
 </script>
 
 <template>
@@ -62,21 +65,41 @@ watchDebounced(
 
     <div class="relative flex flex-col gap-4">
       <!-- Start Input -->
-      <BaseInput v-model="startLocation" placeholder="Start location" label="From" />
+      <BetterInput
+        v-model="startLocation"
+        placeholder="Start location"
+        label="From"
+        @search="handleStartSearch"
+      />
+      <BetterDropdown
+        v-if="startSuggestions.length > 0"
+        :suggestions="startSuggestions"
+        @select="handleStartSelect"
+      />
       <!-- End Input -->
-      <BaseInput v-model="endLocation" placeholder="Destination" label="To" />
+      <BetterInput
+        v-model="endLocation"
+        placeholder="Destination"
+        label="To"
+        @search="handleEndSearch"
+      />
+      <BetterDropdown
+        v-if="endSuggestions.length > 0"
+        :suggestions="endSuggestions"
+        @select="handleEndSelect"
+      />
 
       <!-- Actions -->
       <div class="mt-2 grid grid-cols-2 gap-3">
-        <BaseButton variant="ghost" size="md"> Options </BaseButton>
-        <BaseButton
+        <BetterButton variant="ghost" size="md"> Options </BetterButton>
+        <BetterButton
           variant="primary"
           size="md"
           @click="handleSearch"
           :disabled="!startLocation || !endLocation"
         >
           Find Route
-        </BaseButton>
+        </BetterButton>
       </div>
     </div>
   </div>
