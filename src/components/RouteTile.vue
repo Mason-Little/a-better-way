@@ -1,14 +1,52 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { watchDebounced } from '@vueuse/core'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import { searchPlaces, type SearchResult } from '@/lib/here-sdk/search'
 
 const startLocation = ref('')
 const endLocation = ref('')
+const startSuggestions = ref<SearchResult[]>([])
+const endSuggestions = ref<SearchResult[]>([])
 
 const handleSearch = () => {
   console.log('Searching route from', startLocation.value, 'to', endLocation.value)
 }
+
+watchDebounced(
+  startLocation,
+  async (query) => {
+    if (query.length < 2) {
+      startSuggestions.value = []
+      return
+    }
+    try {
+      startSuggestions.value = await searchPlaces(query)
+      console.log('Start suggestions:', startSuggestions.value)
+    } catch (error) {
+      console.error('Search failed:', error)
+    }
+  },
+  { debounce: 300 },
+)
+
+watchDebounced(
+  endLocation,
+  async (query) => {
+    if (query.length < 2) {
+      endSuggestions.value = []
+      return
+    }
+    try {
+      endSuggestions.value = await searchPlaces(query)
+      console.log('End suggestions:', endSuggestions.value)
+    } catch (error) {
+      console.error('Search failed:', error)
+    }
+  },
+  { debounce: 300 },
+)
 </script>
 
 <template>
