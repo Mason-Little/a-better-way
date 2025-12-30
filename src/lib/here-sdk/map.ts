@@ -39,7 +39,7 @@ export interface MapInstance {
 export function createMap(options: MapOptions): MapInstance {
   const {
     container,
-    center = { lat: 37.7749, lng: -122.4194 }, // San Francisco default
+    center = { lat: 49.7016, lng: -123.1558 }, // Squamish default
     zoom = 14,
     tilt = 45,
     heading = 0,
@@ -72,7 +72,8 @@ export function createMap(options: MapOptions): MapInstance {
   // Set initial view angle
   map.getViewModel().setLookAtData({
     tilt,
-    heading,
+    // Offset heading by 180 degrees to align 0 with North-Up
+    heading: (heading + 180) % 360,
   })
 
   // Enable interactions
