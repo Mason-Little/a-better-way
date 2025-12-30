@@ -10,6 +10,7 @@ import {
   type RoutePoint,
   type RoutingOptions,
 } from '@/lib/here-sdk/route'
+import { drawRoutes as drawRoutesOnMap } from '@/stores/mapStore'
 
 export interface RouteInfo {
   /** The calculated route */
@@ -91,15 +92,18 @@ export async function getRoutes(
   }
 
   // Calculate the route
-  const result = await calculateRoute({
+  const routes = await calculateRoute({
     origin,
     destination,
     alternatives: 3, // Get up to 3 alternative routes
     ...options,
   })
 
+  // Draw routes on the map (if map is available)
+  drawRoutesOnMap(routes)
+
   // Transform routes to RouteInfo format
-  return result.routes.map((route) => {
+  return routes.routes.map((route) => {
     const { duration, distance } = getRouteSummary(route)
 
     return {

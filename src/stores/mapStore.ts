@@ -1,0 +1,139 @@
+/**
+ * Map Store
+ * Manages the shared map instance and route rendering
+ */
+
+import { ref, shallowRef } from 'vue'
+import { RouteRenderer } from '@/lib/here-sdk/routeRenderer'
+import type { RoutingResult } from '@/lib/here-sdk/route'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared State
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The shared HERE Map instance */
+const map = shallowRef<H.Map | null>(null)
+
+/** The route renderer instance */
+const routeRenderer = shallowRef<RouteRenderer | null>(null)
+
+/** Currently displayed routes result */
+const currentRoutes = ref<RoutingResult | null>(null)
+
+/** Currently selected route index */
+const selectedRouteIndex = ref(0)
+
+/** Loading state for route calculation */
+const isLoadingRoutes = ref(false)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Map Management
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Register the map instance (call from MapContainer onMounted)
+ */
+export function registerMap(mapInstance: H.Map): void {
+  map.value = mapInstance
+  routeRenderer.value = new RouteRenderer(mapInstance)
+  console.log('[MapStore] Map registered, route renderer initialized')
+}
+
+/**
+ * Unregister the map instance (call from MapContainer onUnmounted)
+ */
+export function unregisterMap(): void {
+  if (routeRenderer.value) {
+    routeRenderer.value.clearRoutes()
+    routeRenderer.value = null
+  }
+  map.value = null
+  currentRoutes.value = null
+  selectedRouteIndex.value = 0
+  console.log('[MapStore] Map unregistered')
+}
+
+/**
+ * Get the current map instance
+ */
+export function getMap(): H.Map | null {
+  return map.value
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Route Rendering
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Draw routes on the map
+ * @param result - The routing API result containing routes
+ * @param selectIndex - Optional index of route to select (default: 0)
+ */
+export function drawRoutes(result: RoutingResult, selectIndex = 0): void {
+  if (!routeRenderer.value) {
+    console.warn('[MapStore] No route renderer available - map not initialized')
+    return
+  }
+
+  currentRoutes.value = result
+  selectedRouteIndex.value = selectIndex
+  routeRenderer.value.drawRoutes(result, selectIndex)
+  console.log(`[MapStore] Drew ${result.routes.length} routes, selected index ${selectIndex}`)
+}
+
+/**
+ * Select a different route by index
+ * @param index - The route index to select
+ */
+export function selectRoute(index: number): void {
+  if (!routeRenderer.value) {
+    console.warn('[MapStore] No route renderer available')
+    return
+  }
+
+  if (!currentRoutes.value || index >= currentRoutes.value.routes.length) {
+    console.warn(`[MapStore] Invalid route index: ${index}`)
+    return
+  }
+
+  selectedRouteIndex.value = index
+  routeRenderer.value.setSelectedRoute(index)
+  console.log(`[MapStore] Selected route ${index}`)
+}
+
+/**
+ * Clear all routes from the map
+ */
+export function clearRoutes(): void {
+  if (routeRenderer.value) {
+    routeRenderer.value.clearRoutes()
+  }
+  currentRoutes.value = null
+  selectedRouteIndex.value = 0
+  console.log('[MapStore] Routes cleared')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Composable Hook
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Composable for accessing map store state and actions
+ */
+export function useMapStore() {
+  return {
+    // Reactive state
+    map,
+    currentRoutes,
+    selectedRouteIndex,
+    isLoadingRoutes,
+
+    // Actions
+    registerMap,
+    unregisterMap,
+    getMap,
+    drawRoutes,
+    selectRoute,
+    clearRoutes,
+  }
+}

@@ -180,6 +180,17 @@ declare global {
       removeLayer(layer: map.layer.Layer): void
       setBaseLayer(layer: map.layer.Layer): void
       getEngine(): unknown
+
+      // Object management
+      addObject(object: map.Object): void
+      addObjects(objects: map.Object[]): void
+      removeObject(object: map.Object): boolean
+      removeObjects(objects: map.Object[]): void
+      getObjects(): map.Object[]
+
+      // Viewport bounds
+      getViewBounds(): geo.Rect
+      setViewBounds(bounds: geo.Rect, animate?: boolean): void
     }
 
     namespace Map {
@@ -209,6 +220,37 @@ declare global {
         lat: number
         lng: number
         alt?: number
+      }
+
+      /**
+       * A geographic rectangle defined by top-left and bottom-right corners
+       */
+      class Rect {
+        constructor(top: number, left: number, bottom: number, right: number)
+        getTop(): number
+        getLeft(): number
+        getBottom(): number
+        getRight(): number
+        getTopLeft(): Point
+        getBottomRight(): Point
+        mergeRect(rect: Rect): Rect
+        containsPoint(point: IPoint): boolean
+      }
+
+      /**
+       * A sequence of geographic points forming a line or polygon
+       */
+      class LineString {
+        constructor()
+        pushPoint(point: IPoint): void
+        getPointCount(): number
+        getBoundingBox(): Rect | null
+
+        /**
+         * Decode a HERE flexible polyline string into a LineString
+         * @param polyline Encoded flexible polyline string from HERE Routing API
+         */
+        static fromFlexiblePolyline(polyline: string): LineString
       }
     }
 
@@ -243,6 +285,128 @@ declare global {
       namespace layer {
         // eslint-disable-next-line @typescript-eslint/no-empty-object-type
         interface Layer {}
+      }
+
+      /**
+       * Base class for map objects (markers, polylines, polygons, groups)
+       */
+      abstract class Object {
+        getParentGroup(): Group | null
+        setVisibility(visibility: boolean): void
+        getVisibility(): boolean
+        dispose(): void
+        setData(data: unknown): void
+        getData(): unknown
+      }
+
+      /**
+       * Style options for stroke/line rendering
+       */
+      interface SpatialStyle {
+        /** Stroke/line color (CSS color string) */
+        strokeColor?: string
+        /** Fill color for polygons */
+        fillColor?: string
+        /** Line width in pixels */
+        lineWidth?: number
+        /** Line cap style */
+        lineCap?: 'butt' | 'round' | 'square'
+        /** Line join style */
+        lineJoin?: 'miter' | 'round' | 'bevel'
+        /** Miter limit for sharp corners */
+        miterLimit?: number
+        /** Line dash pattern */
+        lineDash?: number[]
+        /** Line dash offset */
+        lineDashOffset?: number
+      }
+
+      /**
+       * Options for creating a Polyline
+       */
+      interface PolylineOptions {
+        /** Style for the polyline */
+        style?: SpatialStyle
+        /** Custom data to attach */
+        data?: unknown
+        /** Whether the polyline is visible */
+        visibility?: boolean
+        /** Z-index for layer ordering */
+        zIndex?: number
+        /** Minimum zoom level for visibility */
+        min?: number
+        /** Maximum zoom level for visibility */
+        max?: number
+      }
+
+      /**
+       * A polyline rendered on the map
+       */
+      class Polyline extends Object {
+        constructor(geometry: geo.LineString, options?: PolylineOptions)
+        getGeometry(): geo.LineString
+        setGeometry(geometry: geo.LineString): void
+        setStyle(style: SpatialStyle): void
+        getStyle(): SpatialStyle
+      }
+
+      /**
+       * A group of map objects for organization and batch operations
+       */
+      class Group extends Object {
+        constructor(options?: { objects?: Object[]; min?: number; max?: number })
+        addObject(object: Object): void
+        addObjects(objects: Object[]): void
+        removeObject(object: Object): boolean
+        removeObjects(objects: Object[]): void
+        removeAll(): void
+        getObjects(): Object[]
+        getBoundingBox(): geo.Rect | null
+        forEach(callback: (object: Object, index: number, group: Group) => void): void
+      }
+
+      /**
+       * Icon for markers
+       */
+      class Icon {
+        constructor(bitmap: string | HTMLElement, options?: Icon.Options)
+      }
+
+      namespace Icon {
+        interface Options {
+          /** Icon size */
+          size?: { w: number; h: number }
+          /** Anchor point relative to top-left */
+          anchor?: { x: number; y: number }
+          /** Whether to hit-test the icon */
+          hitArea?: { type: 'rect' | 'circle'; width?: number; height?: number; radius?: number }
+        }
+      }
+
+      /**
+       * A marker placed on the map
+       */
+      class Marker extends Object {
+        constructor(position: geo.IPoint, options?: Marker.Options)
+        getGeometry(): geo.Point
+        setGeometry(position: geo.IPoint): void
+        setIcon(icon: Icon): void
+        getIcon(): Icon | null
+      }
+
+      namespace Marker {
+        interface Options {
+          /** Icon to display */
+          icon?: Icon
+          /** Minimum zoom for visibility */
+          min?: number
+          /** Maximum zoom for visibility */
+          max?: number
+          /** Z-index */
+          zIndex?: number
+          /** Custom data */
+          data?: unknown
+        }
       }
     }
 

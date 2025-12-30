@@ -20,3 +20,12 @@ export { createMap } from './map'
 // Routing
 export { calculateRoute, geocodeAddress } from './route'
 
+// Route Rendering
+export {
+  RouteRenderer,
+  initRouteRenderer,
+  drawRoutes,
+  setSelectedRoute,
+  clearRoutes,
+  getRouteRenderer,
+} from './routeRenderer'

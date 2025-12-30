@@ -11,6 +11,10 @@ export interface RoutePoint {
 }
 
 export interface RouteSection {
+  /** Unique section ID */
+  id: string
+  /** Section type (e.g., 'vehicle') */
+  type: string
   /** Departure location */
   departure: {
     place: {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { createMap, type MapInstance } from '@/lib/here-sdk'
+import { registerMap, unregisterMap } from '@/stores/mapStore'
 
 const mapContainer = ref<HTMLDivElement>()
 let mapInstance: MapInstance | null = null
@@ -16,9 +17,15 @@ onMounted(() => {
     interactive: true,
     showControls: false,
   })
+
+  // Register map with store for route rendering
+  registerMap(mapInstance.map)
 })
 
 onUnmounted(() => {
+  // Unregister from store first
+  unregisterMap()
+
   mapInstance?.dispose()
   mapInstance = null
 })
