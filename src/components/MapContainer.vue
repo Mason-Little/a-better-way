@@ -1,117 +1,96 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, shallowRef } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { createMap, type MapInstance } from '@/lib/here-sdk'
 
-const mapContainer = ref<HTMLDivElement | null>(null)
-const mapInstance = shallowRef<H.Map | null>(null)
-const platform = shallowRef<H.service.Platform | null>(null)
-const behavior = shallowRef<H.mapevents.Behavior | null>(null)
-const ui = shallowRef<H.ui.UI | null>(null)
-const routePolyline = shallowRef<H.map.Polyline | null>(null)
-
-// Squamish, BC coordinates
-const INITIAL_CENTER = { lat: 49.7016, lng: -123.1558 }
-const INITIAL_ZOOM = 12
-
-const drawRoute = (coordinates: Array<{ lat: number; lng: number }>) => {
-  if (!mapInstance.value) return
-
-  // Clear existing route first
-  clearRoute()
-
-  // Create LineString from coordinates
-  const lineString = new H.geo.LineString()
-  for (const coord of coordinates) {
-    lineString.pushPoint(coord)
-  }
-
-  // Create polyline with styling
-  routePolyline.value = new H.map.Polyline(lineString, {
-    style: {
-      strokeColor: '#2563eb',
-      lineWidth: 5,
-    },
-  })
-
-  mapInstance.value.addObject(routePolyline.value)
-}
-
-const drawRouteFromEncoded = (encodedPolyline: string) => {
-  if (!mapInstance.value) return
-
-  clearRoute()
-
-  const lineString = H.geo.LineString.fromFlexiblePolyline(encodedPolyline)
-  routePolyline.value = new H.map.Polyline(lineString, {
-    style: {
-      strokeColor: '#2563eb',
-      lineWidth: 5,
-    },
-  })
-
-  mapInstance.value.addObject(routePolyline.value)
-}
-
-const clearRoute = () => {
-  if (routePolyline.value && mapInstance.value) {
-    mapInstance.value.removeObject(routePolyline.value)
-    routePolyline.value = null as unknown as H.map.Polyline
-  }
-}
+const mapContainer = ref<HTMLDivElement>()
+let mapInstance: MapInstance | null = null
 
 onMounted(() => {
   if (!mapContainer.value) return
 
-  const apiKey = import.meta.env.VITE_HERE_API_KEY
-  if (!apiKey || apiKey === 'your_here_api_key_here') {
-    console.error('[MapContainer] HERE API key not configured')
-    return
-  }
-
-  // Initialize HERE platform
-  platform.value = new H.service.Platform({ apikey: apiKey })
-  const defaultLayers = platform.value.createDefaultLayers()
-
-  // Initialize map
-  mapInstance.value = new H.Map(mapContainer.value, defaultLayers.vector.normal.map, {
-    center: INITIAL_CENTER,
-    zoom: INITIAL_ZOOM,
-    pixelRatio: window.devicePixelRatio || 1,
+  mapInstance = createMap({
+    container: mapContainer.value,
+    center: { lat: 37.7749, lng: -122.4194 },
+    zoom: 15,
+    tilt: 25,
+    heading: 0,
+    interactive: true,
+    showControls: false,
   })
-
-  // Enable map interaction (pan, zoom)
-  const mapEvents = new H.mapevents.MapEvents(mapInstance.value)
-  behavior.value = new H.mapevents.Behavior(mapEvents)
-
-  // Add default UI (zoom buttons, etc.)
-  ui.value = H.ui.UI.createDefault(mapInstance.value, defaultLayers)
-
-  // Handle window resize
-  window.addEventListener('resize', handleResize)
 })
-
-const handleResize = () => {
-  if (mapInstance.value) {
-    mapInstance.value.getViewModel().setLookAtData({
-      position: mapInstance.value.getCenter(),
-      zoom: mapInstance.value.getZoom(),
-    })
-  }
-}
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  behavior.value?.dispose()
-  ui.value?.dispose()
-  mapInstance.value?.dispose()
+  mapInstance?.dispose()
+  mapInstance = null
 })
 
+// Expose map instance for parent components
 defineExpose({
-  drawRoute,
-  drawRouteFromEncoded,
-  clearRoute,
+  getMap: () => mapInstance?.map,
+  getInstance: () => mapInstance,
 })
 </script>
 
 <template>
-  <div ref="mapContainer" class="h-full w-full"></div>
+  <div ref="mapContainer" class="map-container" />
 </template>
+
+<style scoped>
+.map-container {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1),
+    0 0 0 1px rgb(255 255 255 / 0.05);
+}
+
+/* Override HERE Maps UI styling for modern look */
+:deep(.H_ui) {
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+:deep(.H_zoom) {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 12px rgb(0 0 0 / 0.15),
+    0 0 0 1px rgb(0 0 0 / 0.05);
+  overflow: hidden;
+}
+
+:deep(.H_zoom .H_btn) {
+  background: transparent;
+  border: none;
+  transition: background-color 0.15s ease;
+}
+
+:deep(.H_zoom .H_btn:hover) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+:deep(.H_zoom .H_btn:active) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+:deep(.H_scalebar) {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+}
+</style>

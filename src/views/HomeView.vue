@@ -1,36 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import MapContainer from '../components/MapContainer.vue'
-import NavigationPanel from '../components/NavigationPanel.vue'
-import { getRoute } from '@/lib/here/routing'
-
-const mapRef = ref<InstanceType<typeof MapContainer> | null>(null)
-const isLoading = ref(false)
-
-const handleRoute = async (
-  origin: { lat: number; lng: number },
-  destination: { lat: number; lng: number },
-) => {
-  isLoading.value = true
-
-  try {
-    const result = await getRoute(origin, destination)
-    if (result) {
-      mapRef.value?.drawRoute(result.coordinates)
-    }
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const handleClear = () => {
-  mapRef.value?.clearRoute()
-}
+import MapContainer from '@/components/MapContainer.vue'
 </script>
 
 <template>
-  <main class="relative h-screen w-screen">
-    <MapContainer ref="mapRef" />
-    <NavigationPanel :is-loading="isLoading" @route="handleRoute" @clear="handleClear" />
-  </main>
+  <div class="home-view">
+    <MapContainer />
+  </div>
 </template>
+
+<style scoped>
+.home-view {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  margin: 0;
+}
+</style>
