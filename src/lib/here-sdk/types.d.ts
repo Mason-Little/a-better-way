@@ -266,6 +266,8 @@ declare global {
           zoom?: number
           tilt?: number
           heading?: number
+          /** Bounding box to fit in viewport (HARP engine) */
+          bounds?: geo.Rect
         }
       }
 

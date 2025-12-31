@@ -256,8 +256,15 @@ export class RouteRenderer {
    * Fit the map viewport to show the given bounds with padding
    */
   private fitToBounds(bounds: H.geo.Rect): void {
-    // Add some padding so the route doesn't touch the edges
-    this.map.setViewBounds(bounds, true)
+    // Use getViewModel().setLookAtData() - setViewBounds is deprecated in HARP engine
+    this.map.getViewModel().setLookAtData(
+      {
+        bounds,
+        tilt: 25, // Reset to top-down view for route overview
+        heading: 180,
+      },
+      true // animate
+    )
   }
 }
 
