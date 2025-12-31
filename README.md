@@ -1,87 +1,142 @@
 # A Better Way
 
-A minimal routing application using HERE Platform.
+I got tired of navigation apps telling me the “fastest” route and then dumping me straight into traffic hell.
+
+You know the ones:
+
+- Stop-and-go highways
+- Sitting on the clutch
+- Coolant temps creeping up
+- That one unprotected left turn that _always_ backs up
+
+**A Better Way** isn’t about getting there as fast as possible.
+It’s about getting there without hating the drive.
 
 ---
 
-## About
+## The Idea
 
-**A Better Way** is about finding routes that feel good to drive, not just the fastest path. This is a reset baseline that focuses on simplicity.
+Most maps apps ask:
 
----
+> “What’s the fastest route from A to B?”
 
-## Tech Stack
+This asks:
 
-- **Frontend**: Vue 3 + TypeScript + Vite
-- **Maps**: HERE Maps API for JavaScript
-- **Routing**: HERE Routing API v8
+> “What’s the easiest route that doesn’t suck?”
 
----
+I’m totally fine if a route takes longer **as long as I’m actually moving**.
 
-## Setup
-
-### Prerequisites
-
-- Node.js 20+ or 22+
-- pnpm
-- HERE API Key (get one at [developer.here.com](https://developer.here.com/))
-
-### Installation
-
-```bash
-# Clone and install
-pnpm install
-
-# Configure environment
-cp .env.example .env
-# Edit .env and add your HERE_API_KEY
-```
-
-### Development
-
-```bash
-pnpm dev
-```
-
-### Build
-
-```bash
-pnpm build
-```
+No traffic, fewer stops, fewer sketchy turns — even if it adds time.
 
 ---
 
-## Usage
+## What That Actually Means
 
-1. Open the app in your browser
-2. Enter origin coordinates (lat,lng) in the first input
-3. Enter destination coordinates (lat,lng) in the second input
-4. Click **Route** to display the route polyline
-5. Click **Clear** to remove the route
+Let’s say you’re going from A to B.
 
-Default coordinates:
+- **Route A**
+  - 15 minutes with no traffic
+  - 30 minutes once it backs up
+  - Highway, stop-and-go, constant braking
+- **Route B**
+  - 45 minutes
+  - Basically no traffic
+  - Back roads, steady pace, predictable
 
-- Origin: Squamish, BC (49.7016,-123.1558)
-- Destination: Vancouver, BC (49.2827,-123.1207)
+Every normal nav app picks Route A.
 
----
-
-## What Was Removed
-
-> **Note**: Advanced navigation, rerouting, and tracking logic were intentionally removed in this reset.
-
-This baseline intentionally does not include:
-
-- Location tracking / GPS following
-- Turn-by-turn navigation
-- Route alternatives
-- Traffic avoidance logic
-- Search functionality
-
-These features may be rebuilt in the future on top of this clean foundation.
+**A Better Way picks Route B.**
+Because sitting still is worse than driving longer.
 
 ---
 
-## License
+## Why I Care (and Maybe You Do Too)
 
-MIT
+This is especially nice if you:
+
+- Drive manual
+- Drive something fast, loud, or modified
+- Care about temps, clutch wear, or just not being stressed
+- Would rather cruise than fight traffic
+
+High-performance cars don’t love traffic.
+Neither do I.
+
+---
+
+## How Routing Is Different
+
+This isn’t magic — it’s just different priorities.
+
+### Keeps You Moving
+
+- Tries to avoid stop-and-go
+- Prefers roads with steady flow
+
+### Avoids Bad Left Turns
+
+- Unprotected lefts at stop signs suck
+- They stack cars, waste time, and kill momentum
+- Right turns are usually quicker and smoother, so it favors those
+
+### Highways Aren’t Mandatory
+
+- If the highway’s clogged, it’ll route around it
+- Back roads are fair game if they flow better
+
+### Easier on the Car
+
+- Less idling
+- Less heat soak
+- More airflow, happier engine
+
+---
+
+## Time Isn’t Sacred Here
+
+You get to choose how flexible you want to be.
+
+- **Close to fastest** – don’t go too far out of the way
+- **Balanced** – trade some time for less traffic
+- **Avoid traffic at all costs** – just let me drive
+
+If a route is longer but clearly easier, the app isn’t afraid to pick it.
+
+---
+
+## Sharing the “Better Way”
+
+If you ignore the route and do your own thing — that’s kind of the point.
+
+At the end of the drive, it asks:
+
+> **“Want to share your better way?”**
+
+You can submit:
+
+- Back roads locals actually use
+- Turns everyone avoids
+- Intersections that always clog
+- Routes that never show up as “fast” but always work
+
+No usernames. No clout.
+Just real driver knowledge helping other drivers.
+
+---
+
+## What This Is Not
+
+- Not trying to win ETA benchmarks
+- Not built for delivery drivers on a stopwatch
+- Not trying to replace Google Maps or Waze
+
+This is for people who care how the drive feels, not just when it ends.
+
+---
+
+## Why This Exists
+
+Because sometimes the fastest route is miserable.
+
+And sometimes the better route is just…
+**a better way**.
