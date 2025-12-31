@@ -155,6 +155,8 @@ export interface RoutingOptions {
   origin: RoutePoint
   /** Destination coordinates */
   destination: RoutePoint
+  /** Routing mode: 'fast' = optimize for time, 'short' = optimize for distance (defaults to 'fast') */
+  routingMode?: 'fast' | 'short'
   /** Transport mode (defaults to 'car') */
   transportMode?: 'car' | 'truck' | 'pedestrian' | 'bicycle' | 'scooter'
   /** Return types - what data to include in response */
@@ -167,7 +169,7 @@ export interface RoutingOptions {
   alternatives?: number
   /** Areas/features to avoid */
   avoid?: {
-    /** Features to avoid (e.g., 'tollRoad', 'ferry', 'tunnel') */
+    /** Features to avoid (e.g., 'tollRoad', 'ferry', 'tunnel', 'motorway', 'dirtRoad') */
     features?: string[]
     /** Bounding boxes to avoid (format: 'bbox:west,south,east,north') */
     areas?: string[]
@@ -187,6 +189,7 @@ export async function calculateRoute(
   const {
     origin,
     destination,
+    routingMode = 'fast',
     transportMode = 'car',
     return: returnTypes = ['polyline', 'summary'],
     spans: spanTypes,
@@ -196,7 +199,7 @@ export async function calculateRoute(
   } = options
 
   const routingParams: H.service.RoutingService8.CalculateRouteParams = {
-    routingMode: 'fast',
+    routingMode,
     transportMode,
     origin: `${origin.lat},${origin.lng}`,
     destination: `${destination.lat},${destination.lng}`,

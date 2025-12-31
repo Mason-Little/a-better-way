@@ -4,8 +4,9 @@ import BetterInput from '@/components/ui/BetterInput.vue'
 import BetterButton from '@/components/ui/BetterButton.vue'
 import { searchPlaces, type SearchResult } from '@/lib/here-sdk/search'
 import BetterDropdown from '@/components/ui/BetterDropdown.vue'
-import { getRoutes } from '@/utils/route'
-import { useMapStore } from '@/stores/mapStore'
+import { findBetterWay } from '@/utils/better-way-routing'
+import { geocodeAddress } from '@/lib/here-sdk/route'
+import { useMapStore, drawRoutes, clearRoutes } from '@/stores/mapStore'
 
 const { currentRoutes } = useMapStore()
 const startLocation = ref('')
@@ -17,8 +18,35 @@ const emit = defineEmits<{
   go: []
 }>()
 
-const handleSearch = () => {
-  getRoutes(startLocation.value, endLocation.value)
+const handleSearch = async () => {
+  // Geocode both addresses
+  const [origin, destination] = await Promise.all([
+    geocodeAddress(startLocation.value),
+    geocodeAddress(endLocation.value),
+  ])
+
+  if (!origin) {
+    console.error(`Could not geocode start address: ${startLocation.value}`)
+    return
+  }
+
+  if (!destination) {
+    console.error(`Could not geocode destination: ${endLocation.value}`)
+    return
+  }
+
+  // Find the better way (with traffic avoidance)
+  const result = await findBetterWay({
+    origin,
+    destination,
+  })
+
+  // Draw all routes (alternatives included)
+  drawRoutes({ routes: result.allRoutes })
+
+  if (result.hasBetterRoute) {
+    console.log(`Found a better route! Saves ${result.timeSaved} seconds`)
+  }
 }
 
 const handleStartSelect = (suggestion: SearchResult) => {
@@ -98,7 +126,7 @@ const handleEndSearch = async (query: string) => {
 
       <!-- Actions -->
       <div class="mt-2 grid grid-cols-2 gap-3">
-        <BetterButton variant="ghost" size="md"> Options </BetterButton>
+        <BetterButton variant="ghost" size="md" @click="clearRoutes"> clear </BetterButton>
         <BetterButton
           v-if="!currentRoutes"
           variant="primary"

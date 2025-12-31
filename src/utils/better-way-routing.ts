@@ -29,6 +29,8 @@ export interface BetterWayResult {
   avoidZones: AvoidZone[]
   /** Whether a better route was found */
   hasBetterRoute: boolean
+  /** All alternative routes returned by the API */
+  allRoutes: Route[]
 }
 
 /** Options for better way routing */
@@ -43,6 +45,8 @@ export interface BetterWayOptions extends Omit<RoutingOptions, 'avoid'> {
   avoidIncidents?: boolean
   /** Include slowdowns in avoid zones (default: true) */
   avoidSlowdowns?: boolean
+  /** Number of alternative routes to request (default: 6) */
+  alternatives?: number
 }
 
 /**
@@ -55,6 +59,7 @@ export async function findBetterWay(options: BetterWayOptions): Promise<BetterWa
     minTimeSavings = 60,
     avoidIncidents = true,
     avoidSlowdowns = true,
+    alternatives = 6,
     ...routingOptions
   } = options
 
@@ -74,12 +79,15 @@ export async function findBetterWay(options: BetterWayOptions): Promise<BetterWa
     ...(routingOptions.spans ?? []),
   ]
 
-  // 1. Get original route
+  // 1. Get original routes (with alternatives)
   const originalResult = await calculateRoute({
     ...routingOptions,
+    alternatives,
     return: [...new Set(fullReturnTypes)] as RoutingOptions['return'],
     spans: [...new Set(fullSpanTypes)] as RoutingOptions['spans'],
   })
+
+  const allRoutes = originalResult.routes
 
   const originalRoute = originalResult.routes[0]
   if (!originalRoute) {
@@ -110,6 +118,7 @@ export async function findBetterWay(options: BetterWayOptions): Promise<BetterWa
       timeSaved: 0,
       avoidZones: [],
       hasBetterRoute: false,
+      allRoutes,
     }
   }
 
@@ -154,6 +163,7 @@ export async function findBetterWay(options: BetterWayOptions): Promise<BetterWa
     timeSaved: hasBetterRoute ? timeSaved : 0,
     avoidZones: mergedZones,
     hasBetterRoute,
+    allRoutes,
   }
 }
 
