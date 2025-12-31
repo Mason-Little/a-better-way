@@ -1,13 +1,26 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import MapContainer from '@/components/MapContainer.vue'
 import RouteTile from '@/components/RouteTile.vue'
+import UserPuck from '@/components/UserPuck.vue'
+
+const isNavigating = ref(false)
+
+const handleGo = () => {
+  isNavigating.value = true
+  console.log('[HomeView] Navigation started')
+}
 </script>
 
 <template>
   <div class="home-view">
     <MapContainer />
+
+    <!-- User location puck (renderless, only active when navigating) -->
+    <UserPuck v-if="isNavigating" />
+
     <div class="overlay-container">
-      <RouteTile />
+      <RouteTile @go="handleGo" />
     </div>
   </div>
 </template>

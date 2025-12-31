@@ -5,11 +5,17 @@ import BetterButton from '@/components/ui/BetterButton.vue'
 import { searchPlaces, type SearchResult } from '@/lib/here-sdk/search'
 import BetterDropdown from '@/components/ui/BetterDropdown.vue'
 import { getRoutes } from '@/utils/route'
+import { useMapStore } from '@/stores/mapStore'
 
+const { currentRoutes } = useMapStore()
 const startLocation = ref('')
 const endLocation = ref('')
 const startSuggestions = ref<SearchResult[]>([])
 const endSuggestions = ref<SearchResult[]>([])
+
+const emit = defineEmits<{
+  go: []
+}>()
 
 const handleSearch = () => {
   getRoutes(startLocation.value, endLocation.value)
@@ -94,6 +100,7 @@ const handleEndSearch = async (query: string) => {
       <div class="mt-2 grid grid-cols-2 gap-3">
         <BetterButton variant="ghost" size="md"> Options </BetterButton>
         <BetterButton
+          v-if="!currentRoutes"
           variant="primary"
           size="md"
           @click="handleSearch"
@@ -101,6 +108,7 @@ const handleEndSearch = async (query: string) => {
         >
           Find Route
         </BetterButton>
+        <BetterButton v-else variant="primary" size="md" @click="emit('go')"> Go </BetterButton>
       </div>
     </div>
   </div>

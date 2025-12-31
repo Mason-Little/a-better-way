@@ -7,6 +7,7 @@
 export type { MapOptions, MapInstance } from './map'
 export type { DefaultLayerOptions } from './layers'
 export type { RoutePoint, Route, RouteSection, RoutingOptions, RoutingResult } from './route'
+export type { PuckOptions, PuckPosition } from './puck'
 
 // Platform
 export { getPlatform, resetPlatform } from './platform'
@@ -29,3 +30,14 @@ export {
   clearRoutes,
   getRouteRenderer,
 } from './routeRenderer'
+
+// Puck (User Location Marker)
+export {
+  Puck,
+  initPuck,
+  getPuck,
+  updatePuckPosition,
+  showPuck,
+  hidePuck,
+  disposePuck,
+} from './puck'

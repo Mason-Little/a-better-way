@@ -408,6 +408,50 @@ declare global {
           data?: unknown
         }
       }
+
+      /**
+       * DOM-based icon for DomMarker
+       * Allows for rich HTML/CSS styling and animations
+       */
+      class DomIcon {
+        constructor(element: HTMLElement | string, options?: DomIcon.Options)
+      }
+
+      namespace DomIcon {
+        interface Options {
+          /** Function to handle state changes (e.g., hover) */
+          onAttach?: (clonedElement: HTMLElement, domIcon: DomIcon, domMarker: DomMarker) => void
+          /** Function called when the icon is detached from a marker */
+          onDetach?: (clonedElement: HTMLElement, domIcon: DomIcon, domMarker: DomMarker) => void
+        }
+      }
+
+      /**
+       * A DOM-based marker that renders as an HTML element
+       * Useful for rich, interactive, or animated markers
+       */
+      class DomMarker extends Object {
+        constructor(position: geo.IPoint, options?: DomMarker.Options)
+        getGeometry(): geo.Point
+        setGeometry(position: geo.IPoint): void
+        setIcon(icon: DomIcon): void
+        getIcon(): DomIcon | null
+      }
+
+      namespace DomMarker {
+        interface Options {
+          /** DomIcon to display */
+          icon?: DomIcon
+          /** Minimum zoom for visibility */
+          min?: number
+          /** Maximum zoom for visibility */
+          max?: number
+          /** Z-index */
+          zIndex?: number
+          /** Custom data */
+          data?: unknown
+        }
+      }
     }
 
     namespace mapevents {

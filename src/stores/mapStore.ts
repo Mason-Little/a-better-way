@@ -114,6 +114,92 @@ export function clearRoutes(): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Camera Control
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface MapViewOptions {
+  /** Center point (lat/lng) */
+  center?: { lat: number; lng: number }
+  /** Zoom level (1-20) */
+  zoom?: number
+  /** Heading/bearing in degrees (0 = North, 90 = East) */
+  heading?: number
+  /** Tilt/pitch in degrees (0 = top-down, 60 = max tilt) */
+  tilt?: number
+  /** Animate the transition */
+  animate?: boolean
+}
+
+/**
+ * Update the map camera view
+ * @param options - Camera options (center, zoom, heading, tilt)
+ */
+export function setMapView(options: MapViewOptions): void {
+  if (!map.value) {
+    console.warn('[MapStore] No map available')
+    return
+  }
+
+  const { center, zoom, heading, tilt, animate = true } = options
+
+  if (animate) {
+    // Use lookAt for animated transitions
+    const currentViewModel = map.value.getViewModel()
+    const currentLookAtData = currentViewModel.getLookAtData()
+
+    map.value.getViewModel().setLookAtData(
+      {
+        position: center ?? currentLookAtData.position,
+        zoom: zoom ?? currentLookAtData.zoom,
+        heading: heading ?? currentLookAtData.heading,
+        tilt: tilt ?? currentLookAtData.tilt,
+      },
+      animate
+    )
+  } else {
+    // Direct updates without animation
+    if (center) {
+      map.value.setCenter(center)
+    }
+    if (zoom !== undefined) {
+      map.value.setZoom(zoom)
+    }
+    // Note: heading and tilt require setLookAtData even without animation
+    if (heading !== undefined || tilt !== undefined) {
+      const currentViewModel = map.value.getViewModel()
+      const currentLookAtData = currentViewModel.getLookAtData()
+      currentViewModel.setLookAtData({
+        position: center ?? currentLookAtData.position,
+        zoom: zoom ?? currentLookAtData.zoom,
+        heading: heading ?? currentLookAtData.heading,
+        tilt: tilt ?? currentLookAtData.tilt,
+      })
+    }
+  }
+
+  console.log('[MapStore] Map view updated:', options)
+}
+
+/**
+ * Get the current map view state
+ */
+export function getMapView(): MapViewOptions | null {
+  if (!map.value) {
+    return null
+  }
+
+  const lookAtData = map.value.getViewModel().getLookAtData()
+  return {
+    center: lookAtData.position
+      ? { lat: lookAtData.position.lat, lng: lookAtData.position.lng }
+      : undefined,
+    zoom: lookAtData.zoom,
+    heading: lookAtData.heading,
+    tilt: lookAtData.tilt,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Composable Hook
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -135,5 +221,9 @@ export function useMapStore() {
     drawRoutes,
     selectRoute,
     clearRoutes,
+
+    // Camera control
+    setMapView,
+    getMapView,
   }
 }
