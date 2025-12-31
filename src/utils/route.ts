@@ -91,11 +91,26 @@ export async function getRoutes(
     throw new Error(`Could not geocode destination: ${endAddress}`)
   }
 
-  // Calculate the route
+  // Calculate the route with full details
+  // Note: turnByTurnActions includes all action data + road names, so we skip 'actions'
+  // Spans are used only for traffic data (dynamicSpeedInfo) since road names come from actions
   const routes = await calculateRoute({
     origin,
     destination,
-    alternatives: 3, // Get up to 3 alternative routes
+    alternatives: 6, // Get up to 6 alternative routes
+    return: [
+      'polyline',
+      'summary',
+      'turnByTurnActions', // Full turn-by-turn with road names (includes instructions)
+      'incidents',         // Traffic incidents
+      'typicalDuration',   // For comparing actual vs typical travel time
+    ],
+    spans: [
+      'dynamicSpeedInfo',  // Real-time traffic (trafficSpeed, baseSpeed, jamFactor)
+      'functionalClass',   // Road type (1=highway, 5=local)
+      'gates',             // Toll booths, barriers
+      'railwayCrossings',  // Railroad crossings
+    ],
     ...options,
   })
 

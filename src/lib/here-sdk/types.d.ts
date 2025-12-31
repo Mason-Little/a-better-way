@@ -110,6 +110,7 @@ declare global {
           origin: string
           destination: string
           return?: string
+          spans?: string
           departureTime?: string
           alternatives?: number
           via?: string[]
