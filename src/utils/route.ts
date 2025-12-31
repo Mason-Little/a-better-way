@@ -110,6 +110,7 @@ export async function getRoutes(
       'functionalClass',   // Road type (1=highway, 5=local)
       'gates',             // Toll booths, barriers
       'railwayCrossings',  // Railroad crossings
+      'incidents',         // Incident locations on polyline
     ],
     ...options,
   })

@@ -75,6 +75,8 @@ export interface RouteSpan {
   gates?: boolean
   /** Railway crossing present */
   railwayCrossings?: boolean
+  /** Incident indices (references to section.incidents array) */
+  incidents?: number[]
 }
 
 export interface RouteSection {
@@ -146,6 +148,7 @@ export type RouteSpanType =
   | 'functionalClass'
   | 'gates'
   | 'railwayCrossings'
+  | 'incidents'
 
 export interface RoutingOptions {
   /** Origin coordinates */
@@ -162,6 +165,13 @@ export interface RoutingOptions {
   departureTime?: string
   /** Number of alternative routes to calculate (0-6) */
   alternatives?: number
+  /** Areas/features to avoid */
+  avoid?: {
+    /** Features to avoid (e.g., 'tollRoad', 'ferry', 'tunnel') */
+    features?: string[]
+    /** Bounding boxes to avoid (format: 'bbox:west,south,east,north') */
+    areas?: string[]
+  }
 }
 
 /**
@@ -182,6 +192,7 @@ export async function calculateRoute(
     spans: spanTypes,
     departureTime = 'any',
     alternatives = 0,
+    avoid,
   } = options
 
   const routingParams: H.service.RoutingService8.CalculateRouteParams = {
@@ -192,11 +203,8 @@ export async function calculateRoute(
     return: returnTypes.join(','),
     departureTime,
     alternatives,
-  }
-
-  // Add spans if specified
-  if (spanTypes && spanTypes.length > 0) {
-    routingParams.spans = spanTypes.join(',')
+    ...(spanTypes?.length && { spans: spanTypes.join(',') }),
+    ...(avoid && { avoid }),
   }
 
   return new Promise((resolve, reject) => {
