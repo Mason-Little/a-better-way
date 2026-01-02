@@ -62,6 +62,16 @@ export {
   type MapViewOptions,
 } from './map'
 
+// Mapillary API
+export {
+  MapillaryGeometrySchema,
+  MapillaryFeatureSchema,
+  MapillaryResponseSchema,
+  type MapillaryGeometry,
+  type MapillaryFeature,
+  type MapillaryResponse,
+} from './mapillary'
+
 // Puck (user location marker)
 export {
   PuckOptionsSchema,
