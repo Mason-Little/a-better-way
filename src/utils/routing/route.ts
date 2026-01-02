@@ -6,32 +6,10 @@
 import { calculateRoute, geocodeAddress } from '@/lib/here-sdk/route'
 import type { Route, RoutePoint, RoutingOptions, RouteSection, RouteInfo } from '@/entities'
 import { drawRoutes as drawRoutesOnMap } from '@/stores/mapStore'
+import { formatDuration, formatDistance } from '@/utils/format'
 
 // Re-export types for convenience
 export type { Route, RoutePoint, RouteSection, RoutingOptions, RouteInfo }
-
-/**
- * Format duration in seconds to human-readable string
- */
-function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.round((seconds % 3600) / 60)
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`
-  }
-  return `${minutes} min`
-}
-
-/**
- * Format distance in meters to human-readable string
- */
-function formatDistance(meters: number): string {
-  if (meters >= 1000) {
-    return `${(meters / 1000).toFixed(1)} km`
-  }
-  return `${Math.round(meters)} m`
-}
 
 /**
  * Calculate route summary from sections

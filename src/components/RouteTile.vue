@@ -4,7 +4,7 @@ import BetterInput from '@/components/ui/BetterInput.vue'
 import BetterButton from '@/components/ui/BetterButton.vue'
 import { searchPlaces, type SearchResult } from '@/lib/here-sdk/search'
 import BetterDropdown from '@/components/ui/BetterDropdown.vue'
-import { findBetterWay } from '@/utils/better-way-routing'
+import { findBetterWay } from '@/utils/routing'
 import { geocodeAddress } from '@/lib/here-sdk/route'
 import { useMapStore, drawRoutes, clearRoutes } from '@/stores/mapStore'
 

@@ -1,25 +1,10 @@
 /**
- * Mapillary API utilities for fetching map features
+ * Mapillary API Utilities
+ * Fetch and process map features from Mapillary
  */
 
 import type { MapillaryFeature, MapillaryResponse } from '@/entities'
-
-/** Create a bounding box around a point for Mapillary API */
-function createBbox(lat: number, lng: number, radiusMeters: number): [number, number, number, number] {
-  // Approximate degrees per meter (varies by latitude)
-  const latDegPerMeter = 1 / 111320
-  const lngDegPerMeter = 1 / (111320 * Math.cos((lat * Math.PI) / 180))
-
-  const latOffset = radiusMeters * latDegPerMeter
-  const lngOffset = radiusMeters * lngDegPerMeter
-
-  return [
-    lng - lngOffset, // west
-    lat - latOffset, // south
-    lng + lngOffset, // east
-    lat + latOffset, // north
-  ]
-}
+import { createBboxArray } from '@/utils/geo'
 
 /** Fetch map features from Mapillary within a radius of a point */
 export async function getMapFeaturesNearby(
@@ -28,7 +13,7 @@ export async function getMapFeaturesNearby(
   radiusMeters = 5,
   limit = 200
 ): Promise<MapillaryFeature[]> {
-  const bbox = createBbox(lat, lng, radiusMeters)
+  const bbox = createBboxArray(lat, lng, radiusMeters)
   const bboxStr = bbox.join(',')
 
   const url = new URL(`${import.meta.env.VITE_MAPILLARY_API_BASE}/map_features`)
