@@ -5,7 +5,10 @@
 
 import { ref, shallowRef } from 'vue'
 import { RouteRenderer } from '@/lib/here-sdk/routeRenderer'
-import type { RoutingResult } from '@/lib/here-sdk/route'
+import type { RoutingResult, MapViewOptions } from '@/entities'
+
+// Re-export type for convenience
+export type { MapViewOptions }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared State
@@ -116,19 +119,6 @@ export function clearRoutes(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 // Camera Control
 // ─────────────────────────────────────────────────────────────────────────────
-
-export interface MapViewOptions {
-  /** Center point (lat/lng) */
-  center?: { lat: number; lng: number }
-  /** Zoom level (1-20) */
-  zoom?: number
-  /** Heading/bearing in degrees (0 = North, 90 = East) */
-  heading?: number
-  /** Tilt/pitch in degrees (0 = top-down, 60 = max tilt) */
-  tilt?: number
-  /** Animate the transition */
-  animate?: boolean
-}
 
 /**
  * Update the map camera view

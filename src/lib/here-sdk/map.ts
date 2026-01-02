@@ -3,29 +3,13 @@
  * Functions for creating and configuring map instances
  */
 
-
-
 import { createDefaultLayers } from './layers'
+import type { MapOptions } from '@/entities'
 
-export interface MapOptions {
-  /** Container element or element ID */
-  container: HTMLElement | string
-  /** Initial center coordinates */
-  center?: { lat: number; lng: number }
-  /** Initial zoom level (1-20) */
-  zoom?: number
-  /** Initial tilt angle in degrees (0-60 for HARP) */
-  tilt?: number
-  /** Initial heading/bearing in degrees */
-  heading?: number
-  /** Enable map interactions (pan, zoom, rotate) */
-  interactive?: boolean
-  /** Show default UI controls */
-  showControls?: boolean
-  /** Pixel ratio for high-DPI displays */
-  pixelRatio?: number
-}
+// Re-export type for convenience
+export type { MapOptions }
 
+// MapInstance remains local since it contains runtime objects (H.Map, etc.)
 export interface MapInstance {
   map: H.Map
   behavior: H.mapevents.Behavior | null

@@ -4,16 +4,10 @@
  */
 
 import { getPlatform } from './platform'
+import type { SearchResult } from '@/entities'
 
-export interface SearchResult {
-  id: string
-  title: string
-  address: string
-  position: {
-    lat: number
-    lng: number
-  }
-}
+// Re-export type for convenience
+export type { SearchResult }
 
 /**
  * Search for places using HERE Autosuggest API

@@ -11,39 +11,10 @@
  * - Group management for organizing puck-related objects
  */
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types & Configuration
-// ─────────────────────────────────────────────────────────────────────────────
+import type { PuckOptions, PuckPosition } from '@/entities'
 
-export interface PuckOptions {
-  /** Puck size in pixels */
-  size?: number
-  /** Primary color (CSS color string) */
-  primaryColor?: string
-  /** Secondary/border color (CSS color string) */
-  borderColor?: string
-  /** Show accuracy ring around puck */
-  showAccuracyRing?: boolean
-  /** Accuracy ring color (CSS color string) */
-  accuracyRingColor?: string
-  /** Show directional heading indicator */
-  showHeading?: boolean
-  /** Use DOM marker for rich styling (vs canvas-based icon) */
-  useDomMarker?: boolean
-  /** Z-index for rendering order */
-  zIndex?: number
-}
-
-export interface PuckPosition {
-  /** Latitude */
-  lat: number
-  /** Longitude */
-  lng: number
-  /** Heading in degrees (0 = North, 90 = East) */
-  heading?: number
-  /** Horizontal accuracy in meters */
-  accuracy?: number
-}
+// Re-export types for convenience
+export type { PuckOptions, PuckPosition }
 
 // Default configuration
 const DEFAULTS: Required<PuckOptions> = {

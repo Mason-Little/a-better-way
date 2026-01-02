@@ -4,176 +4,31 @@
  */
 
 import { getPlatform } from './platform'
+import type {
+  RoutePoint,
+  Route,
+  RouteSection,
+  RouteAction,
+  RouteIncident,
+  RouteSpan,
+  RoutingOptions,
+  RoutingResult,
+  RouteReturnType,
+  RouteSpanType,
+} from '@/entities'
 
-export interface RoutePoint {
-  lat: number
-  lng: number
-}
-
-/** Action/maneuver on the route */
-export interface RouteAction {
-  /** Type of action (e.g., 'depart', 'arrive', 'turn', 'continue') */
-  action: string
-  /** Duration of this action in seconds */
-  duration: number
-  /** Length of this action in meters */
-  length: number
-  /** Human-readable instruction (if requested) */
-  instruction?: string
-  /** Direction of the action (e.g., 'left', 'right', 'straight') */
-  direction?: string
-  /** Severity of the turn (e.g., 'light', 'normal', 'quite') */
-  severity?: string
-  /** Offset in the polyline where this action occurs */
-  offset: number
-  /** Exit number for roundabouts/highways */
-  exit?: number
-  /** Road name after this action */
-  nextRoad?: {
-    name?: { value: string; language: string }[]
-    number?: { value: string; language: string }[]
-  }
-  /** Current road info */
-  currentRoad?: {
-    name?: { value: string; language: string }[]
-    number?: { value: string; language: string }[]
-  }
-}
-
-/** Traffic incident on the route */
-export interface RouteIncident {
-  /** Incident ID */
-  id: string
-  /** Type of incident (e.g., 'accident', 'construction', 'congestion') */
-  type: string
-  /** Severity (e.g., 'minor', 'major', 'critical') */
-  severity?: string
-  /** Description of the incident */
-  description?: string
-  /** Start offset in polyline */
-  startOffset?: number
-  /** End offset in polyline */
-  endOffset?: number
-}
-
-/** Span data for a segment of the route */
-export interface RouteSpan {
-  /** Offset in polyline where span starts */
-  offset: number
-  /** Functional class (1-5, 1=highway, 5=local) */
-  functionalClass?: number
-  /** Dynamic speed info (traffic) */
-  dynamicSpeedInfo?: {
-    /** Traffic speed in m/s */
-    trafficSpeed?: number
-    /** Base speed without traffic in m/s */
-    baseSpeed?: number
-    /** Jam factor (0-10) */
-    jamFactor?: number
-  }
-  /** Gate/barrier present */
-  gates?: boolean
-  /** Railway crossing present */
-  railwayCrossings?: boolean
-  /** Incident indices (references to section.incidents array) */
-  incidents?: number[]
-}
-
-export interface RouteSection {
-  /** Unique section ID */
-  id: string
-  /** Section type (e.g., 'vehicle') */
-  type: string
-  /** Departure location */
-  departure: {
-    place: {
-      location: RoutePoint
-    }
-  }
-  /** Arrival location */
-  arrival: {
-    place: {
-      location: RoutePoint
-    }
-  }
-  /** Encoded polyline for the section geometry */
-  polyline: string
-  /** Summary with distance and duration */
-  summary: {
-    /** Duration in seconds */
-    duration: number
-    /** Length in meters */
-    length: number
-    /** Base duration without traffic */
-    baseDuration?: number
-    /** Typical duration */
-    typicalDuration?: number
-  }
-  /** Transport mode used */
-  transport: {
-    mode: string
-  }
-  /** Actions/maneuvers (if requested) */
-  actions?: RouteAction[]
-  /** Turn-by-turn actions (if requested) */
-  turnByTurnActions?: RouteAction[]
-  /** Traffic incidents (if requested) */
-  incidents?: RouteIncident[]
-  /** Span data (if requested) */
-  spans?: RouteSpan[]
-}
-
-export interface Route {
-  /** Unique route ID */
-  id: string
-  /** Route sections */
-  sections: RouteSection[]
-}
-
-export interface RoutingResult {
-  routes: Route[]
-}
-
-/** Return types for route response */
-export type RouteReturnType =
-  | 'polyline'
-  | 'summary'
-  | 'typicalDuration'
-  | 'turnByTurnActions'
-  | 'incidents'
-
-/** Span types for detailed segment data */
-export type RouteSpanType =
-  | 'dynamicSpeedInfo'
-  | 'functionalClass'
-  | 'gates'
-  | 'railwayCrossings'
-  | 'incidents'
-
-export interface RoutingOptions {
-  /** Origin coordinates */
-  origin: RoutePoint
-  /** Destination coordinates */
-  destination: RoutePoint
-  /** Routing mode: 'fast' = optimize for time, 'short' = optimize for distance (defaults to 'fast') */
-  routingMode?: 'fast' | 'short'
-  /** Transport mode (defaults to 'car') */
-  transportMode?: 'car' | 'truck' | 'pedestrian' | 'bicycle' | 'scooter'
-  /** Return types - what data to include in response */
-  return?: RouteReturnType[]
-  /** Span types - what segment-level data to include */
-  spans?: RouteSpanType[]
-  /** Departure time (ISO 8601 string or 'any') */
-  departureTime?: string
-  /** Number of alternative routes to calculate (0-6) */
-  alternatives?: number
-  /** Areas/features to avoid */
-  avoid?: {
-    /** Features to avoid (e.g., 'tollRoad', 'ferry', 'tunnel', 'motorway', 'dirtRoad') */
-    features?: string[]
-    /** Bounding boxes to avoid (format: 'bbox:west,south,east,north') */
-    areas?: string[]
-  }
+// Re-export types for convenience (backwards compatibility)
+export type {
+  RoutePoint,
+  Route,
+  RouteSection,
+  RouteAction,
+  RouteIncident,
+  RouteSpan,
+  RoutingOptions,
+  RoutingResult,
+  RouteReturnType,
+  RouteSpanType,
 }
 
 /**

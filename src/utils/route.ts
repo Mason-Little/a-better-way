@@ -3,27 +3,12 @@
  * High-level routing logic that uses the HERE SDK wrapper
  */
 
-import {
-  calculateRoute,
-  geocodeAddress,
-  type Route,
-  type RoutePoint,
-  type RoutingOptions,
-} from '@/lib/here-sdk/route'
+import { calculateRoute, geocodeAddress } from '@/lib/here-sdk/route'
+import type { Route, RoutePoint, RoutingOptions, RouteSection, RouteInfo } from '@/entities'
 import { drawRoutes as drawRoutesOnMap } from '@/stores/mapStore'
 
-export interface RouteInfo {
-  /** The calculated route */
-  route: Route
-  /** Total duration in seconds */
-  duration: number
-  /** Total distance in meters */
-  distance: number
-  /** Formatted duration string (e.g., "1h 23m") */
-  formattedDuration: string
-  /** Formatted distance string (e.g., "45.2 km") */
-  formattedDistance: string
-}
+// Re-export types for convenience
+export type { Route, RoutePoint, RouteSection, RoutingOptions, RouteInfo }
 
 /**
  * Format duration in seconds to human-readable string
@@ -165,6 +150,3 @@ export async function getRoutesByCoordinates(
     }
   })
 }
-
-// Re-export types for convenience
-export type { Route, RoutePoint, RouteSection, RoutingOptions } from '@/lib/here-sdk/route'

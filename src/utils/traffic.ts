@@ -3,45 +3,19 @@
  */
 
 import { decode } from '@here/flexpolyline'
-import type { RouteSection, RouteSpan, RouteIncident, RoutePoint } from '@/lib/here-sdk/route'
+import type {
+  RoutePoint,
+  RouteSection,
+  RouteSpan,
+  Slowdown,
+  LocatedIncident,
+  TrafficSummary,
+  AvoidZone,
+  AvoidZoneOptions,
+} from '@/entities'
 
-/** A detected slowdown on the route */
-export interface Slowdown {
-  /** Location of the slowdown */
-  location: RoutePoint
-  /** Offset in polyline */
-  offset: number
-  /** Current traffic speed in m/s */
-  trafficSpeed: number
-  /** Normal speed without traffic in m/s */
-  baseSpeed: number
-  /** Slowdown as percentage (0-1, e.g., 0.3 = 30% slower) */
-  slowdownPercent: number
-  /** Road class (1=highway, 5=local) */
-  functionalClass?: number
-}
-
-/** An incident with its location */
-export interface LocatedIncident extends RouteIncident {
-  /** Location of the incident */
-  location: RoutePoint
-  /** Offset in polyline */
-  offset: number
-}
-
-/** Traffic summary for a route */
-export interface TrafficSummary {
-  /** Total delay in seconds */
-  delaySeconds: number
-  /** Whether there's significant traffic */
-  hasTraffic: boolean
-  /** Number of slowdown segments */
-  slowdownCount: number
-  /** Number of incidents */
-  incidentCount: number
-  /** Worst slowdown percentage (0-1) */
-  worstSlowdown: number
-}
+// Re-export types for convenience
+export type { Slowdown, LocatedIncident, TrafficSummary, AvoidZone, AvoidZoneOptions }
 
 /**
  * Decode HERE flexible polyline to array of points
@@ -155,30 +129,6 @@ export function msToMph(metersPerSecond: number): number {
  */
 export function msToKmh(metersPerSecond: number): number {
   return metersPerSecond * 3.6
-}
-
-/** A bounding box avoid zone for routing */
-export interface AvoidZone {
-  /** North latitude */
-  north: number
-  /** South latitude */
-  south: number
-  /** East longitude */
-  east: number
-  /** West longitude */
-  west: number
-}
-
-/** Options for generating avoid zones */
-export interface AvoidZoneOptions {
-  /** Radius around the point in meters (default: 500) */
-  radiusMeters?: number
-  /** Only include slowdowns worse than this (0-1, default: 0.3 = 30%) */
-  slowdownThreshold?: number
-  /** Include incidents in avoid zones (default: true) */
-  includeIncidents?: boolean
-  /** Include slowdowns in avoid zones (default: true) */
-  includeSlowdowns?: boolean
 }
 
 /**

@@ -3,101 +3,93 @@
  * Smart routing that automatically finds routes avoiding traffic
  */
 
-import { calculateRoute, type RoutingOptions, type Route } from '@/lib/here-sdk/route'
+import { calculateRoute } from '@/lib/here-sdk/route'
+import type {
+  RoutingOptions,
+  Route,
+  BetterWayResult,
+  BetterWayOptions,
+  TrafficSummary,
+} from '@/entities'
 import {
   generateAvoidZones,
   formatAvoidZonesForApi,
   mergeOverlappingZones,
   getTrafficSummary,
-  type AvoidZone,
-  type TrafficSummary,
 } from '@/utils/traffic'
 
-/** Result of a better way route calculation */
-export interface BetterWayResult {
-  /** The original route (may have traffic) */
-  originalRoute: Route
-  /** Traffic summary for the original route */
-  originalTraffic: TrafficSummary
-  /** Alternative route avoiding traffic (if found and better) */
-  betterRoute: Route | null
-  /** Traffic summary for the better route */
-  betterTraffic: TrafficSummary | null
-  /** Time saved in seconds (positive = better route is faster) */
-  timeSaved: number
-  /** Avoid zones that were generated */
-  avoidZones: AvoidZone[]
-  /** Whether a better route was found */
-  hasBetterRoute: boolean
-  /** All alternative routes returned by the API */
-  allRoutes: Route[]
+// Re-export types for convenience
+export type { BetterWayResult, BetterWayOptions }
+
+/** Required return types for traffic analysis */
+const REQUIRED_RETURN_TYPES = ['polyline', 'summary', 'turnByTurnActions', 'incidents', 'typicalDuration'] as const
+
+/** Required span types for traffic analysis */
+const REQUIRED_SPAN_TYPES = ['dynamicSpeedInfo', 'functionalClass', 'incidents'] as const
+
+/** Merge required types with user-provided types, removing duplicates */
+function mergeUniqueTypes<T extends string>(required: readonly T[], userProvided: T[] | undefined): T[] {
+  if (!userProvided || userProvided.length === 0) {
+    return [...required]
+  }
+  const combined = [...required, ...userProvided]
+  return [...new Set(combined)]
 }
 
-/** Options for better way routing */
-export interface BetterWayOptions extends Omit<RoutingOptions, 'avoid'> {
-  /** Minimum slowdown to consider avoiding (0-1, default: 0.25 = 25%) */
-  slowdownThreshold?: number
-  /** Radius around traffic points to avoid in meters (default: 500) */
-  avoidRadiusMeters?: number
-  /** Minimum time savings to consider a route "better" in seconds (default: 60) */
-  minTimeSavings?: number
-  /** Include incidents in avoid zones (default: true) */
-  avoidIncidents?: boolean
-  /** Include slowdowns in avoid zones (default: true) */
-  avoidSlowdowns?: boolean
-  /** Number of alternative routes to request (default: 6) */
-  alternatives?: number
+/** Extract the first section from a route, or null if not available */
+function getFirstSection(route: Route | null | undefined) {
+  if (!route) return null
+  if (route.sections.length === 0) return null
+  return route.sections[0]
 }
 
 /**
  * Calculate a route and automatically find a better alternative if there's traffic
  */
 export async function findBetterWay(options: BetterWayOptions): Promise<BetterWayResult> {
-  const {
-    slowdownThreshold = 0.25,
-    avoidRadiusMeters = 500,
-    minTimeSavings = 60,
-    avoidIncidents = true,
-    avoidSlowdowns = true,
-    alternatives = 6,
-    ...routingOptions
-  } = options
+  // Extract better-way specific options with defaults
+  const slowdownThreshold = options.slowdownThreshold ?? 0.25
+  const avoidRadiusMeters = options.avoidRadiusMeters ?? 500
+  const minTimeSavings = options.minTimeSavings ?? 60
+  const avoidIncidents = options.avoidIncidents ?? true
+  const avoidSlowdowns = options.avoidSlowdowns ?? true
+  const alternatives = options.alternatives ?? 6
 
-  // Ensure we request the data needed for traffic analysis
-  const fullReturnTypes = [
-    'polyline',
-    'summary',
-    'turnByTurnActions',
-    'incidents',
-    'typicalDuration',
-    ...(routingOptions.return ?? []),
-  ]
-  const fullSpanTypes = [
-    'dynamicSpeedInfo',
-    'functionalClass',
-    'incidents',
-    ...(routingOptions.spans ?? []),
-  ]
+  // Build base routing options (exclude better-way specific fields)
+  const baseRoutingOptions: RoutingOptions = {
+    origin: options.origin,
+    destination: options.destination,
+    return: options.return,
+    spans: options.spans,
+    transportMode: options.transportMode,
+    routingMode: options.routingMode,
+    departureTime: options.departureTime,
+  }
+
+  // Build the full return and span types needed for traffic analysis
+  const returnTypes = mergeUniqueTypes(REQUIRED_RETURN_TYPES, baseRoutingOptions.return)
+  const spanTypes = mergeUniqueTypes(REQUIRED_SPAN_TYPES, baseRoutingOptions.spans)
 
   // 1. Get original routes (with alternatives)
   const originalResult = await calculateRoute({
-    ...routingOptions,
+    ...baseRoutingOptions,
     alternatives,
-    return: [...new Set(fullReturnTypes)] as RoutingOptions['return'],
-    spans: [...new Set(fullSpanTypes)] as RoutingOptions['spans'],
+    return: returnTypes as RoutingOptions['return'],
+    spans: spanTypes as RoutingOptions['spans'],
   })
 
   const allRoutes = originalResult.routes
+  const originalRoute = allRoutes[0]
 
-  const originalRoute = originalResult.routes[0]
   if (!originalRoute) {
     throw new Error('No route found')
   }
 
-  const originalSection = originalRoute.sections[0]
+  const originalSection = getFirstSection(originalRoute)
   if (!originalSection) {
     throw new Error('Route has no sections')
   }
+
   const originalTraffic = getTrafficSummary(originalSection)
 
   // 2. Generate avoid zones from traffic issues
@@ -108,7 +100,7 @@ export async function findBetterWay(options: BetterWayOptions): Promise<BetterWa
     includeSlowdowns: avoidSlowdowns,
   })
 
-  // If no traffic issues, return original route
+  // If no traffic issues found, return original route as-is
   if (avoidZones.length === 0) {
     return {
       originalRoute,
@@ -122,37 +114,39 @@ export async function findBetterWay(options: BetterWayOptions): Promise<BetterWa
     }
   }
 
-  // 3. Merge and format avoid zones
+  // 3. Merge and format avoid zones for the API
   const mergedZones = mergeOverlappingZones(avoidZones)
   const avoidAreas = formatAvoidZonesForApi(mergedZones)
 
-  // 4. Get alternative route avoiding traffic
+  // 4. Try to get an alternative route that avoids traffic
   let betterRoute: Route | null = null
   let betterTraffic: TrafficSummary | null = null
 
   try {
     const betterResult = await calculateRoute({
-      ...routingOptions,
-      return: [...new Set(fullReturnTypes)] as RoutingOptions['return'],
-      spans: [...new Set(fullSpanTypes)] as RoutingOptions['spans'],
+      ...baseRoutingOptions,
+      return: returnTypes as RoutingOptions['return'],
+      spans: spanTypes as RoutingOptions['spans'],
       avoid: { areas: avoidAreas },
     })
 
     betterRoute = betterResult.routes[0] ?? null
-    if (betterRoute?.sections[0]) {
-      betterTraffic = getTrafficSummary(betterRoute.sections[0])
+
+    const betterSection = getFirstSection(betterRoute)
+    if (betterSection) {
+      betterTraffic = getTrafficSummary(betterSection)
     }
   } catch {
-    // If avoid routing fails, just return original
     console.warn('Could not find route avoiding traffic areas')
   }
 
   // 5. Calculate time saved
   const originalDuration = originalSection.summary.duration
-  const betterDuration = betterRoute?.sections[0]?.summary.duration ?? originalDuration
+  const betterSection = getFirstSection(betterRoute)
+  const betterDuration = betterSection ? betterSection.summary.duration : originalDuration
   const timeSaved = originalDuration - betterDuration
 
-  // 6. Determine if the better route is actually better
+  // 6. Determine if the better route is actually worth taking
   const hasBetterRoute = betterRoute !== null && timeSaved >= minTimeSavings
 
   return {
