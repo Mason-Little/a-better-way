@@ -67,11 +67,7 @@ export function getMap(): H.Map | null {
 // Route Rendering
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Draw routes on the map
- * @param result - The routing API result containing routes
- * @param selectIndex - Optional index of route to select (default: 0)
- */
+/** Draw routes on the map */
 export function drawRoutes(result: RoutingResult, selectIndex = 0): void {
   if (!routeRenderer.value) {
     console.warn('[MapStore] No route renderer available - map not initialized')
@@ -84,10 +80,7 @@ export function drawRoutes(result: RoutingResult, selectIndex = 0): void {
   console.log(`[MapStore] Drew ${result.routes.length} routes, selected index ${selectIndex}`)
 }
 
-/**
- * Select a different route by index
- * @param index - The route index to select
- */
+/** Select a different route by index */
 export function selectRoute(index: number): void {
   if (!routeRenderer.value) {
     console.warn('[MapStore] No route renderer available')
@@ -120,10 +113,7 @@ export function clearRoutes(): void {
 // Camera Control
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Update the map camera view
- * @param options - Camera options (center, zoom, heading, tilt)
- */
+/** Update the map camera view */
 export function setMapView(options: MapViewOptions): void {
   if (!map.value) {
     console.warn('[MapStore] No map available')

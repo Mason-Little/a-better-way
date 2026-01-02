@@ -4,13 +4,7 @@
 
 import type { MapillaryFeature, MapillaryResponse } from '@/entities'
 
-/**
- * Create a bounding box around a point for Mapillary API
- * @param lat Center latitude
- * @param lng Center longitude
- * @param radiusMeters Radius in meters (default 5m)
- * @returns Bounding box as [west, south, east, north]
- */
+/** Create a bounding box around a point for Mapillary API */
 function createBbox(lat: number, lng: number, radiusMeters: number): [number, number, number, number] {
   // Approximate degrees per meter (varies by latitude)
   const latDegPerMeter = 1 / 111320
@@ -27,14 +21,7 @@ function createBbox(lat: number, lng: number, radiusMeters: number): [number, nu
   ]
 }
 
-/**
- * Fetch map features from Mapillary within a radius of a point
- * @param lat Latitude of center point
- * @param lng Longitude of center point
- * @param radiusMeters Radius in meters (default 5m)
- * @param limit Maximum number of results (default 200)
- * @returns Array of Mapillary features
- */
+/** Fetch map features from Mapillary within a radius of a point */
 export async function getMapFeaturesNearby(
   lat: number,
   lng: number,
@@ -60,11 +47,7 @@ export async function getMapFeaturesNearby(
   return data.data
 }
 
-/**
- * Filter features by object type
- * @param features Array of Mapillary features
- * @param objectType Object type prefix to filter (e.g., 'object--traffic-light')
- */
+/** Filter features by object type */
 export function filterByObjectType(features: MapillaryFeature[], objectType: string): MapillaryFeature[] {
   return features.filter((f) => f.object_value.startsWith(objectType))
 }

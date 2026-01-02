@@ -9,11 +9,7 @@ import type { SearchResult } from '@/entities'
 // Re-export type for convenience
 export type { SearchResult }
 
-/**
- * Search for places using HERE Autosuggest API
- * @param query Search text
- * @param at Center coordinates for bias (optional)
- */
+/** Search for places using HERE Autosuggest API */
 export async function searchPlaces(
   query: string,
   at?: { lat: number; lng: number }

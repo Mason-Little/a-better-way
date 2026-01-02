@@ -93,12 +93,7 @@ export class RouteRenderer {
   // Public API
   // ───────────────────────────────────────────────────────────────────────────
 
-  /**
-   * Draw all routes from a HERE Routing v8 response
-   *
-   * @param result - The routing API response containing routes
-   * @param selectedIndex - Optional index of the route to select (default: 0)
-   */
+  /** Draw all routes from a HERE Routing v8 response */
   drawRoutes(result: RoutingResult, selectedIndex = 0): void {
     // Clear any existing routes first
     this.clearRoutes()
@@ -123,12 +118,7 @@ export class RouteRenderer {
     this.setSelectedRoute(selectedIndex)
   }
 
-  /**
-   * Change which route is selected
-   * Updates styling without re-decoding or re-creating polylines
-   *
-   * @param index - Index of the route to select
-   */
+  /** Change which route is selected - updates styling without re-decoding */
   setSelectedRoute(index: number): void {
     if (index < 0 || index >= this.state.routes.length) {
       console.warn(`[RouteRenderer] Invalid route index: ${index}`)
@@ -284,10 +274,7 @@ export function initRouteRenderer(map: H.Map): RouteRenderer {
   return defaultRenderer
 }
 
-/**
- * Draw routes using the default renderer
- * @param result - HERE Routing v8 response
- */
+/** Draw routes using the default renderer */
 export function drawRoutes(result: RoutingResult): void {
   if (!defaultRenderer) {
     throw new Error('[RouteRenderer] Not initialized. Call initRouteRenderer(map) first.')
@@ -295,10 +282,7 @@ export function drawRoutes(result: RoutingResult): void {
   defaultRenderer.drawRoutes(result)
 }
 
-/**
- * Select a different route by index
- * @param index - Route index to select
- */
+/** Select a different route by index */
 export function setSelectedRoute(index: number): void {
   if (!defaultRenderer) {
     throw new Error('[RouteRenderer] Not initialized. Call initRouteRenderer(map) first.')

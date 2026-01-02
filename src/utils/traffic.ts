@@ -29,11 +29,7 @@ export function decodePolyline(polyline: string): RoutePoint[] {
     .map((coords) => ({ lat: coords[0], lng: coords[1] }))
 }
 
-/**
- * Find all slowdowns in a route section
- * @param section The route section to analyze
- * @param threshold Minimum slowdown to detect (0-1, default 0.2 = 20% slower)
- */
+/** Find all slowdowns in a route section */
 export function findSlowdowns(section: RouteSection, threshold = 0.2): Slowdown[] {
   if (!section.spans || !section.polyline) return []
 
@@ -131,11 +127,7 @@ export function msToKmh(metersPerSecond: number): number {
   return metersPerSecond * 3.6
 }
 
-/**
- * Create a bounding box around a point
- * @param point Center point
- * @param radiusMeters Radius in meters
- */
+/** Create a bounding box around a point */
 export function createBoundingBox(point: RoutePoint, radiusMeters: number): AvoidZone {
   // Approximate degrees per meter (varies by latitude, but close enough for small radii)
   const latDegPerMeter = 1 / 111320

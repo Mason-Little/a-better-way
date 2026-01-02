@@ -31,10 +31,7 @@ export type {
   RouteSpanType,
 }
 
-/**
- * Calculate a route between two points using HERE Routing API v8
- * @param options Routing options including origin and destination
- */
+/** Calculate a route between two points using HERE Routing API v8 */
 export async function calculateRoute(
   options: RoutingOptions
 ): Promise<RoutingResult> {
@@ -78,10 +75,7 @@ export async function calculateRoute(
   })
 }
 
-/**
- * Geocode an address string to coordinates using HERE Search API
- * @param address Address string to geocode
- */
+/** Geocode an address string to coordinates using HERE Search API */
 export async function geocodeAddress(
   address: string
 ): Promise<RoutePoint | null> {

@@ -48,15 +48,7 @@ function getRouteSummary(route: Route): { duration: number; distance: number } {
   return { duration: totalDuration, distance: totalDistance }
 }
 
-/**
- * Get routes between two addresses
- * This is the main entry point for routing functionality
- *
- * @param startAddress Starting address string
- * @param endAddress Destination address string
- * @param options Optional routing configuration
- * @returns Array of route information with formatted summaries
- */
+/** Get routes between two addresses - main entry point for routing functionality */
 export async function getRoutes(
   startAddress: string,
   endAddress: string,
@@ -117,15 +109,7 @@ export async function getRoutes(
   })
 }
 
-/**
- * Get routes between two coordinate points
- * Use this when you already have coordinates
- *
- * @param origin Starting coordinates
- * @param destination Destination coordinates
- * @param options Optional routing configuration
- * @returns Array of route information with formatted summaries
- */
+/** Get routes between two coordinate points - use when you already have coordinates */
 export async function getRoutesByCoordinates(
   origin: RoutePoint,
   destination: RoutePoint,
