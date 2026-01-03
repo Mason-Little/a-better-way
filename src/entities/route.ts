@@ -17,6 +17,7 @@ export const RouteActionSchema = z.object({
   instruction: z.string().optional().describe('Human-readable instruction'),
   direction: z.string().optional().describe("Direction (e.g., 'left', 'right')"),
   severity: z.string().optional().describe("Turn severity (e.g., 'light', 'normal')"),
+  turnAngle: z.float32().optional().describe('Turn angle in degrees'),
   offset: z.number().describe('Offset in polyline'),
   exit: z.number().optional().describe('Exit number for roundabouts/highways'),
   nextRoad: RoadInfoSchema.optional().describe('Road name after this action'),

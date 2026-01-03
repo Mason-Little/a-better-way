@@ -1,16 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import BetterInput from '@/components/ui/BetterInput.vue'
 import BetterButton from '@/components/ui/BetterButton.vue'
 import { searchPlaces, type SearchResult } from '@/lib/here-sdk/search'
+import { getBetterWayRoutes } from '@/utils/routing/better-way'
 import BetterDropdown from '@/components/ui/BetterDropdown.vue'
-import { findBetterWay } from '@/utils/routing'
-import { geocodeAddress } from '@/lib/here-sdk/route'
-import { useMapStore, drawRoutes, clearRoutes } from '@/stores/mapStore'
+import { useMapStore, clearRoutes, drawRoutes } from '@/stores/mapStore'
 
-const { currentRoutes } = useMapStore()
-const startLocation = ref('')
-const endLocation = ref('')
+const { currentRoutes, isLoadingRoutes } = useMapStore()
+
+const startLocation = reactive({
+  address: '',
+  coordinates: {
+    lat: 0,
+    lng: 0,
+  },
+})
+const endLocation = reactive({
+  address: '',
+  coordinates: {
+    lat: 0,
+    lng: 0,
+  },
+})
 const startSuggestions = ref<SearchResult[]>([])
 const endSuggestions = ref<SearchResult[]>([])
 
@@ -19,43 +31,28 @@ const emit = defineEmits<{
 }>()
 
 const handleSearch = async () => {
-  // Geocode both addresses
-  const [origin, destination] = await Promise.all([
-    geocodeAddress(startLocation.value),
-    geocodeAddress(endLocation.value),
-  ])
-
-  if (!origin) {
-    console.error(`Could not geocode start address: ${startLocation.value}`)
-    return
-  }
-
-  if (!destination) {
-    console.error(`Could not geocode destination: ${endLocation.value}`)
-    return
-  }
-
-  // Find the better way (with traffic avoidance)
-  const result = await findBetterWay({
-    origin,
-    destination,
-  })
-
-  // Draw all routes (alternatives included)
-  drawRoutes({ routes: result.allRoutes })
-
-  if (result.hasBetterRoute) {
-    console.log(`Found a better route! Saves ${result.timeSaved} seconds`)
+  isLoadingRoutes.value = true
+  try {
+    const routes = await getBetterWayRoutes(startLocation.coordinates, endLocation.coordinates)
+    if (routes && routes.length > 0) {
+      drawRoutes({ routes: routes })
+    }
+  } catch (error) {
+    console.error('Failed to find better routes:', error)
+  } finally {
+    isLoadingRoutes.value = false
   }
 }
 
 const handleStartSelect = (suggestion: SearchResult) => {
-  startLocation.value = suggestion.address
+  startLocation.address = suggestion.address
+  startLocation.coordinates = suggestion.position
   startSuggestions.value = []
 }
 
 const handleEndSelect = (suggestion: SearchResult) => {
-  endLocation.value = suggestion.address
+  endLocation.address = suggestion.address
+  endLocation.coordinates = suggestion.position
   endSuggestions.value = []
 }
 
@@ -101,7 +98,7 @@ const handleEndSearch = async (query: string) => {
     <div class="relative flex flex-col gap-4">
       <!-- Start Input -->
       <BetterInput
-        v-model="startLocation"
+        v-model="startLocation.address"
         placeholder="Start location"
         label="From"
         @search="handleStartSearch"
@@ -113,7 +110,7 @@ const handleEndSearch = async (query: string) => {
       />
       <!-- End Input -->
       <BetterInput
-        v-model="endLocation"
+        v-model="endLocation.address"
         placeholder="Destination"
         label="To"
         @search="handleEndSearch"

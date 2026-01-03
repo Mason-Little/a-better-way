@@ -20,6 +20,7 @@ export const RoutingOptionsSchema = z.object({
     features: z.array(z.string()).optional().describe("Features to avoid (e.g., 'tollRoad')"),
     areas: z.array(z.string()).optional().describe("Bounding boxes to avoid"),
   }).optional().describe('Areas/features to avoid'),
+  via: z.array(RoutePointSchema).optional().describe('Intermediate waypoints'),
 }).describe('Routing options for API request')
 
 export const RoutingResultSchema = z.object({

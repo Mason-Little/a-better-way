@@ -48,6 +48,7 @@ export async function calculateRoute(
     departureTime = 'any',
     alternatives = 0,
     avoid,
+    via,
   } = options
 
   const routingParams: H.service.RoutingService8.CalculateRouteParams = {
@@ -59,7 +60,9 @@ export async function calculateRoute(
     departureTime,
     alternatives,
     ...(spanTypes?.length && { spans: spanTypes.join(',') }),
-    ...(avoid && { avoid }),
+    ...(avoid?.areas?.length && { 'avoid[areas]': avoid.areas.join('|') }),
+    ...(avoid?.features?.length && { 'avoid[features]': avoid.features.join(',') }),
+    ...(via && { via: via.map(p => `${p.lat},${p.lng}!passThrough=true`) }),
   }
 
   return new Promise((resolve, reject) => {
@@ -67,31 +70,6 @@ export async function calculateRoute(
       routingParams,
       (result) => {
         resolve(result as RoutingResult)
-      },
-      (error: Error) => {
-        reject(error)
-      }
-    )
-  })
-}
-
-/** Geocode an address string to coordinates using HERE Search API */
-export async function geocodeAddress(
-  address: string
-): Promise<RoutePoint | null> {
-  const platform = getPlatform()
-  const service = platform.getSearchService()
-
-  return new Promise((resolve, reject) => {
-    service.geocode(
-      { q: address },
-      (result: H.service.GeocodingService.Result) => {
-        const position = result.items?.[0]?.position
-        if (position) {
-          resolve({ lat: position.lat, lng: position.lng })
-        } else {
-          resolve(null)
-        }
       },
       (error: Error) => {
         reject(error)

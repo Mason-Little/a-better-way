@@ -19,7 +19,7 @@ export { createDefaultLayers, getVectorLayer } from './layers'
 export { createMap } from './map'
 
 // Routing
-export { calculateRoute, geocodeAddress } from './route'
+export { calculateRoute } from './route'
 
 // Route Rendering
 export {
