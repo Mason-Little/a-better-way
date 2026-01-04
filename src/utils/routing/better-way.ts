@@ -1,9 +1,9 @@
 import type { Route, RoutePoint } from '@/entities'
 import { drawRoutes } from '@/stores/mapStore'
 import { calculateRoute } from '@/lib/here-sdk'
+import { formatBoundingBox } from '@/utils/geo'
 import { getRoutes } from '@/utils/routing/route'
 import { findStopSigns, type StopSignResult } from '@/utils/stoplight'
-import { formatAvoidZonesForApi } from '@/utils/traffic'
 
 //TODO: ADD Via Points to
 
@@ -21,7 +21,7 @@ async function calculateBetterRoute(
   destination: RoutePoint,
   avoidZones: StopSignResult[],
 ): Promise<Route[]> {
-  const avoidAreas = formatAvoidZonesForApi(avoidZones.map((zone) => zone.avoidZone))
+  const avoidAreas = formatBoundingBox(avoidZones.map((zone) => zone.avoidZone))
 
   try {
     const matchResult = await calculateRoute({
