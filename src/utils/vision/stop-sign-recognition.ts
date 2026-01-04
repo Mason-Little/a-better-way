@@ -1,10 +1,9 @@
-import type { RoutePoint } from "@/entities/"
+import type { RoutePoint } from '@/entities/'
 
 /**
  * Stop Sign Detector API Client
  * TypeScript client for the Stop Sign Detector API.
  */
-
 
 interface DetectPayload {
   lat: number
@@ -25,12 +24,12 @@ const BASE_URL = import.meta.env.VITE_VISION_BASE_URL
 export async function detectStopSign(
   point: RoutePoint,
   heading: number,
-  conf: number = 0.25
+  conf: number = 0.25,
 ): Promise<boolean> {
   const payload: DetectPayload = { lat: point.lat, lon: point.lng, heading, conf }
 
   console.log(
-    `[StopSignRecognition] Testing detection at: ${payload.lat}, ${payload.lon}, heading: ${payload.heading}`
+    `[StopSignRecognition] Testing detection at: ${payload.lat}, ${payload.lon}, heading: ${payload.heading}`,
   )
 
   try {

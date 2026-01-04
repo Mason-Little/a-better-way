@@ -46,9 +46,8 @@ export function getTrafficSummary(section: RouteSection): TrafficSummary {
   const delaySeconds = duration - (baseDuration ?? duration)
 
   const slowdowns = findSlowdowns(section, 0.1) // 10% threshold for counting
-  const worstSlowdown = slowdowns.length > 0
-    ? Math.max(...slowdowns.map((s) => s.slowdownPercent))
-    : 0
+  const worstSlowdown =
+    slowdowns.length > 0 ? Math.max(...slowdowns.map((s) => s.slowdownPercent)) : 0
 
   return {
     delaySeconds,

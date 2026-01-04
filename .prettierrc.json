@@ -2,5 +2,21 @@
   "$schema": "https://json.schemastore.org/prettierrc",
   "semi": false,
   "singleQuote": true,
-  "printWidth": 100
+  "printWidth": 100,
+  "plugins": ["@prettier/plugin-oxc", "@ianvs/prettier-plugin-sort-imports"],
+  "importOrder": [
+    "^vue$",
+    "^vue-router$",
+    "^pinia$",
+    "<THIRD_PARTY_MODULES>",
+    "",
+    "^@/entities",
+    "^@/stores",
+    "^@/lib",
+    "^@/utils",
+    "^@/components",
+    "",
+    "^[./]"
+  ],
+  "importOrderTypeScriptVersion": "5.0.0"
 }

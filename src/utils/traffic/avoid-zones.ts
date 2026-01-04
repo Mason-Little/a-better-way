@@ -3,8 +3,9 @@
  * Generate and manipulate avoid zones for routing
  */
 
-import type { RouteSection, AvoidZone, AvoidZoneOptions } from '@/entities'
+import type { AvoidZone, AvoidZoneOptions, RouteSection } from '@/entities'
 import { createBoundingBox } from '@/utils/geo'
+
 import { findSlowdowns } from './analysis'
 import { getLocatedIncidents } from './incidents'
 
@@ -14,7 +15,7 @@ import { getLocatedIncidents } from './incidents'
  */
 export function generateAvoidZones(
   section: RouteSection,
-  options: AvoidZoneOptions = {}
+  options: AvoidZoneOptions = {},
 ): AvoidZone[] {
   const {
     radiusMeters = 500,
@@ -58,9 +59,7 @@ export function generateAvoidZones(
  * Returns a string array for the avoid[areas] parameter
  */
 export function formatAvoidZonesForApi(zones: AvoidZone[]): string[] {
-  return zones.map(
-    (z) => `bbox:${z.west},${z.south},${z.east},${z.north}`
-  )
+  return zones.map((z) => `bbox:${z.west},${z.south},${z.east},${z.north}`)
 }
 
 /**
@@ -77,11 +76,7 @@ export function mergeOverlappingZones(zones: AvoidZone[]): AvoidZone[] {
   for (let i = 1; i < sorted.length; i++) {
     const next = sorted[i]!
     // Check if zones overlap
-    if (
-      next.south <= current.north &&
-      next.west <= current.east &&
-      next.east >= current.west
-    ) {
+    if (next.south <= current.north && next.west <= current.east && next.east >= current.west) {
       // Merge
       current = {
         north: Math.max(current.north, next.north),

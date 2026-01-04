@@ -3,7 +3,7 @@
  * Shared geographic bounding box calculations
  */
 
-import type { RoutePoint, AvoidZone } from '@/entities'
+import type { AvoidZone, RoutePoint } from '@/entities'
 
 /**
  * Create a bounding box (AvoidZone format) around a point
@@ -32,7 +32,7 @@ export function createBoundingBox(point: RoutePoint, radiusMeters: number): Avoi
 export function createBboxArray(
   lat: number,
   lng: number,
-  radiusMeters: number
+  radiusMeters: number,
 ): [number, number, number, number] {
   const latDegPerMeter = 1 / 111320
   const lngDegPerMeter = 1 / (111320 * Math.cos((lat * Math.PI) / 180))

@@ -4,8 +4,9 @@
  */
 
 import { ref, shallowRef } from 'vue'
+
+import type { MapViewOptions, RoutingResult } from '@/entities'
 import { RouteRenderer } from '@/lib/here-sdk/routeRenderer'
-import type { RoutingResult, MapViewOptions } from '@/entities'
 
 // Re-export type for convenience
 export type { MapViewOptions }
@@ -134,7 +135,7 @@ export function setMapView(options: MapViewOptions): void {
         heading: heading ?? currentLookAtData.heading,
         tilt: tilt ?? currentLookAtData.tilt,
       },
-      animate
+      animate,
     )
   } else {
     // Direct updates without animation

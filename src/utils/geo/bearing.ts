@@ -1,4 +1,4 @@
-import type { RoutePoint } from "@/entities"
+import type { RoutePoint } from '@/entities'
 
 /**
  * Calculate the bearing (heading) between two geographic points.

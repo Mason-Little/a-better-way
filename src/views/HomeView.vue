@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+
 import MapContainer from '@/components/MapContainer.vue'
 import RouteTile from '@/components/RouteTile.vue'
 import UserPuck from '@/components/UserPuck.vue'

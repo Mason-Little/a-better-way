@@ -14,9 +14,16 @@
  */
 
 import { onMounted, onUnmounted, ref } from 'vue'
+
 import { useMapStore } from '@/stores/mapStore'
-import { initPuck, showPuck, updatePuckPosition, hidePuck, disposePuck } from '@/lib/here-sdk/puck'
-import type { PuckPosition } from '@/lib/here-sdk/puck'
+import {
+  disposePuck,
+  hidePuck,
+  initPuck,
+  showPuck,
+  updatePuckPosition,
+  type PuckPosition,
+} from '@/lib/here-sdk/puck'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Props

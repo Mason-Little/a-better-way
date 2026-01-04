@@ -3,8 +3,9 @@
  * Functions for creating and configuring map instances
  */
 
-import { createDefaultLayers } from './layers'
 import type { MapOptions } from '@/entities'
+
+import { createDefaultLayers } from './layers'
 
 // Re-export type for convenience
 export type { MapOptions }
@@ -33,10 +34,7 @@ export function createMap(options: MapOptions): MapInstance {
   } = options
 
   // Get container element
-  const element =
-    typeof container === 'string'
-      ? document.getElementById(container)
-      : container
+  const element = typeof container === 'string' ? document.getElementById(container) : container
 
   if (!element) {
     throw new Error('Map container element not found')

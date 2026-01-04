@@ -1,7 +1,8 @@
 @import 'tailwindcss';
 
 /* Prevent mobile browser behaviors that interfere with map interaction */
-html, body {
+html,
+body {
   overscroll-behavior: none;
   touch-action: manipulation;
 }

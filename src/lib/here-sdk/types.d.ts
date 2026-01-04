@@ -63,12 +63,12 @@ declare global {
         autosuggest(
           params: SearchService.Params,
           onSuccess: (result: SearchService.Result) => void,
-          onError: (error: Error) => void
+          onError: (error: Error) => void,
         ): void
         geocode(
           params: GeocodingService.Params,
           onSuccess: (result: GeocodingService.Result) => void,
-          onError: (error: Error) => void
+          onError: (error: Error) => void,
         ): void
       }
 
@@ -99,7 +99,7 @@ declare global {
         calculateRoute(
           params: RoutingService8.CalculateRouteParams,
           onSuccess: (result: unknown) => void,
-          onError: (error: Error) => void
+          onError: (error: Error) => void,
         ): void
       }
 
@@ -126,12 +126,12 @@ declare global {
         geocode(
           params: GeocodingService.Params,
           onSuccess: (result: GeocodingService.Result) => void,
-          onError: (error: Error) => void
+          onError: (error: Error) => void,
         ): void
         reverseGeocode(
           params: GeocodingService.ReverseParams,
           onSuccess: (result: GeocodingService.Result) => void,
-          onError: (error: Error) => void
+          onError: (error: Error) => void,
         ): void
       }
 
@@ -167,11 +167,7 @@ declare global {
     }
 
     class Map {
-      constructor(
-        element: HTMLElement,
-        layer: map.layer.Layer,
-        options?: Map.Options
-      )
+      constructor(element: HTMLElement, layer: map.layer.Layer, options?: Map.Options)
       dispose(): void
       getViewModel(): map.ViewModel
       setCenter(center: geo.IPoint, animate?: boolean): void
@@ -206,7 +202,7 @@ declare global {
       enum EngineType {
         HARP = 'HARP',
         WEBGL = 'WEBGL',
-        P2D = 'P2D'
+        P2D = 'P2D',
       }
     }
 
@@ -482,7 +478,7 @@ declare global {
           DBL_TAP_ZOOM = 3,
           FRACTIONAL_ZOOM = 4,
           TILT = 5,
-          HEADING = 6
+          HEADING = 6,
         }
       }
     }
@@ -512,7 +508,7 @@ declare global {
         RIGHT_BOTTOM = 'right-bottom',
         BOTTOM_LEFT = 'bottom-left',
         BOTTOM_CENTER = 'bottom-center',
-        BOTTOM_RIGHT = 'bottom-right'
+        BOTTOM_RIGHT = 'bottom-right',
       }
 
       class ZoomControl extends Control {

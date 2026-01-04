@@ -3,9 +3,9 @@
  * High-level routing logic that uses the HERE SDK wrapper
  */
 
+import type { Route, RouteInfo, RoutePoint, RouteSection, RoutingOptions } from '@/entities'
 import { calculateRoute } from '@/lib/here-sdk/route'
-import type { Route, RoutePoint, RoutingOptions, RouteSection, RouteInfo } from '@/entities'
-import { formatDuration, formatDistance } from '@/utils/format'
+import { formatDistance, formatDuration } from '@/utils/format'
 
 // Re-export types for convenience
 export type { Route, RoutePoint, RouteSection, RoutingOptions, RouteInfo }
@@ -29,7 +29,7 @@ function getRouteSummary(route: Route): { duration: number; distance: number } {
 export async function getRoutes(
   origin: RoutePoint,
   destination: RoutePoint,
-  options?: Partial<RoutingOptions>
+  options?: Partial<RoutingOptions>,
 ): Promise<RouteInfo[]> {
   const result = await calculateRoute({
     origin,

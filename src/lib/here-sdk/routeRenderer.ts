@@ -24,7 +24,7 @@ import type { Route, RoutingResult } from './route'
 const ROUTE_STYLES = {
   // Selected route: Solid blue
   selected: {
-    strokeColor: '#3B82F6',  // Blue
+    strokeColor: '#3B82F6', // Blue
     lineWidth: 6,
     lineCap: 'round' as const,
     lineJoin: 'round' as const,
@@ -32,7 +32,7 @@ const ROUTE_STYLES = {
 
   // Alternative routes: Semi-transparent gray
   alternative: {
-    strokeColor: 'rgba(100, 116, 139, 0.6)',  // Slate gray
+    strokeColor: 'rgba(100, 116, 139, 0.6)', // Slate gray
     lineWidth: 5,
     lineCap: 'round' as const,
     lineJoin: 'round' as const,
@@ -107,9 +107,7 @@ export class RouteRenderer {
     this.state.masterGroup = new H.map.Group()
 
     // Decode and render each route
-    this.state.routes = result.routes.map((route, index) =>
-      this.decodeAndRenderRoute(route, index)
-    )
+    this.state.routes = result.routes.map((route, index) => this.decodeAndRenderRoute(route, index))
 
     // Add master group to map
     this.map.addObject(this.state.masterGroup)
@@ -149,7 +147,7 @@ export class RouteRenderer {
       this.map.removeObject(this.state.masterGroup)
 
       // Dispose all groups and polylines
-      this.state.routes.forEach(route => {
+      this.state.routes.forEach((route) => {
         route.group.removeAll()
       })
 
@@ -191,7 +189,7 @@ export class RouteRenderer {
     const group = new H.map.Group()
 
     // Process each section (routes can have multiple sections for complex routes)
-    route.sections.forEach(section => {
+    route.sections.forEach((section) => {
       if (!section.polyline) {
         console.warn(`[RouteRenderer] Section missing polyline: ${section.id}`)
         return
@@ -204,9 +202,7 @@ export class RouteRenderer {
       // Update combined bounds
       const sectionBounds = lineString.getBoundingBox()
       if (sectionBounds) {
-        combinedBounds = combinedBounds
-          ? combinedBounds.mergeRect(sectionBounds)
-          : sectionBounds
+        combinedBounds = combinedBounds ? combinedBounds.mergeRect(sectionBounds) : sectionBounds
       }
 
       // Create single polyline with solid color
@@ -253,7 +249,7 @@ export class RouteRenderer {
         tilt: 25, // Reset to top-down view for route overview
         heading: 180,
       },
-      true // animate
+      true, // animate
     )
   }
 }

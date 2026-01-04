@@ -1,1 +1,1 @@
-export { detectStopSign } from "./stop-sign-recognition"
+export { detectStopSign } from './stop-sign-recognition'

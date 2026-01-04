@@ -3,7 +3,7 @@
  * Located incident extraction from route data
  */
 
-import type { RouteSection, RouteSpan, LocatedIncident } from '@/entities'
+import type { LocatedIncident, RouteSection, RouteSpan } from '@/entities'
 import { decodePolyline } from '@/utils/geo'
 
 /**

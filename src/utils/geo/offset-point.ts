@@ -1,4 +1,4 @@
-import type { RoutePoint } from "@/entities"
+import type { RoutePoint } from '@/entities'
 
 /**
  * Calculate a point offset from a given location in the opposite direction of a bearing.
@@ -21,7 +21,7 @@ function toDegrees(radians: number): number {
 export function getPointBehind(
   point: RoutePoint,
   bearing: number,
-  distanceMeters: number = 20
+  distanceMeters: number = 20,
 ): RoutePoint {
   // Reverse the bearing (add 180 degrees and normalize)
   const reverseBearing = (bearing + 180) % 360
@@ -33,16 +33,18 @@ export function getPointBehind(
 
   const lat2 = Math.asin(
     Math.sin(lat1) * Math.cos(angularDistance) +
-    Math.cos(lat1) * Math.sin(angularDistance) * Math.cos(bearingRad)
+      Math.cos(lat1) * Math.sin(angularDistance) * Math.cos(bearingRad),
   )
 
-  const lng2 = lng1 + Math.atan2(
-    Math.sin(bearingRad) * Math.sin(angularDistance) * Math.cos(lat1),
-    Math.cos(angularDistance) - Math.sin(lat1) * Math.sin(lat2)
-  )
+  const lng2 =
+    lng1 +
+    Math.atan2(
+      Math.sin(bearingRad) * Math.sin(angularDistance) * Math.cos(lat1),
+      Math.cos(angularDistance) - Math.sin(lat1) * Math.sin(lat2),
+    )
 
   return {
     lat: toDegrees(lat2),
-    lng: toDegrees(lng2)
+    lng: toDegrees(lng2),
   }
 }

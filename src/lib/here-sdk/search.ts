@@ -3,8 +3,9 @@
  * Handles geocoding and autosuggest functionality
  */
 
-import { getPlatform } from './platform'
 import type { SearchResult } from '@/entities'
+
+import { getPlatform } from './platform'
 
 // Re-export type for convenience
 export type { SearchResult }
@@ -12,7 +13,7 @@ export type { SearchResult }
 /** Search for places using HERE Autosuggest API */
 export async function searchPlaces(
   query: string,
-  at?: { lat: number; lng: number }
+  at?: { lat: number; lng: number },
 ): Promise<SearchResult[]> {
   const platform = getPlatform()
   const service = platform.getSearchService()
@@ -37,7 +38,7 @@ export async function searchPlaces(
       },
       (error: Error) => {
         reject(error)
-      }
+      },
     )
   })
 }

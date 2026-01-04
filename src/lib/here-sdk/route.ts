@@ -3,19 +3,20 @@
  * Low-level SDK wrapper for route calculation
  */
 
-import { getPlatform } from './platform'
 import type {
-  RoutePoint,
   Route,
-  RouteSection,
   RouteAction,
   RouteIncident,
+  RoutePoint,
+  RouteReturnType,
+  RouteSection,
   RouteSpan,
+  RouteSpanType,
   RoutingOptions,
   RoutingResult,
-  RouteReturnType,
-  RouteSpanType,
 } from '@/entities'
+
+import { getPlatform } from './platform'
 
 // Re-export types for convenience (backwards compatibility)
 export type {
@@ -32,9 +33,7 @@ export type {
 }
 
 /** Calculate a route between two points using HERE Routing API v8 */
-export async function calculateRoute(
-  options: RoutingOptions
-): Promise<RoutingResult> {
+export async function calculateRoute(options: RoutingOptions): Promise<RoutingResult> {
   const platform = getPlatform()
   const router = platform.getRoutingService(null, 8)
 
@@ -62,7 +61,7 @@ export async function calculateRoute(
     ...(spanTypes?.length && { spans: spanTypes.join(',') }),
     ...(avoid?.areas?.length && { 'avoid[areas]': avoid.areas.join('|') }),
     ...(avoid?.features?.length && { 'avoid[features]': avoid.features.join(',') }),
-    ...(via && { via: via.map(p => `${p.lat},${p.lng}!passThrough=true`) }),
+    ...(via && { via: via.map((p) => `${p.lat},${p.lng}!passThrough=true`) }),
   }
 
   return new Promise((resolve, reject) => {
@@ -73,7 +72,7 @@ export async function calculateRoute(
       },
       (error: Error) => {
         reject(error)
-      }
+      },
     )
   })
 }

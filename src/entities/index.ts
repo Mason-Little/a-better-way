@@ -55,12 +55,7 @@ export {
 export { SearchResultSchema, type SearchResult } from './search'
 
 // Map configuration
-export {
-  MapOptionsSchema,
-  MapViewOptionsSchema,
-  type MapOptions,
-  type MapViewOptions,
-} from './map'
+export { MapOptionsSchema, MapViewOptionsSchema, type MapOptions, type MapViewOptions } from './map'
 
 // Mapillary API
 export {
@@ -73,9 +68,4 @@ export {
 } from './mapillary'
 
 // Puck (user location marker)
-export {
-  PuckOptionsSchema,
-  PuckPositionSchema,
-  type PuckOptions,
-  type PuckPosition,
-} from './puck'
+export { PuckOptionsSchema, PuckPositionSchema, type PuckOptions, type PuckPosition } from './puck'
