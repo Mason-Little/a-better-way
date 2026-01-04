@@ -1,10 +1,12 @@
 import { decodePolyline, createBoundingBox } from "@/utils/geo";
-import { getMapFeaturesNearby } from "@/utils/mapillary";
 import { getRoutes } from "@/utils/routing/route";
 import type { Route, RoutePoint, AvoidZone } from "@/entities";
 import { formatAvoidZonesForApi } from "@/utils/traffic";
 import { calculateRoute } from "@/lib/here-sdk";
 import { drawRoutes } from "@/stores/mapStore";
+import { detectStopSign } from "@/utils/vision";
+import { calculateBearing, getPointBehind } from "@/utils/geo";
+
 
 //TODO: ADD Via Points to
 
@@ -45,16 +47,11 @@ function checkDebugManualStopSign(point: { lat: number, lng: number }): AvoidZon
     return null
 }
 
-async function checkForStopSignAtPoint(point: { lat: number, lng: number }): Promise<AvoidZone | null> {
+async function checkForStopSignAtPoint(point: RoutePoint, heading: number): Promise<boolean> {
     const manualResult = checkDebugManualStopSign(point)
-    if (manualResult) return manualResult
+    if (manualResult) return true
 
-    const features = await getMapFeaturesNearby(point.lat, point.lng, 5)
-
-    if (features.some(feature => (STOP_SIGNS as readonly string[]).includes(feature.object_value))) {
-        return createBoundingBox(point, 20)
-    }
-    return null
+    return await detectStopSign(point, heading)
 }
 
 export type StopSignResult = {
@@ -71,12 +68,17 @@ async function findStopSigns(route: Route): Promise<StopSignResult[]> {
 
     const checkPromises = turnByTurnActions.map(async (action, index) => {
         if (isSharpLeftTurn(action)) {
-            const point = polylinePoints[action.offset]
-            if (!point) return null
+            const turnPoint = polylinePoints[action.offset]
+            const lastPoint = polylinePoints[action.offset - 1]
+            if (!turnPoint || !lastPoint) return null
 
-            const avoidZone = await checkForStopSignAtPoint(point)
-            if (avoidZone) {
-                return { avoidZone, actionIndex: index }
+            const heading = calculateBearing(turnPoint, lastPoint)
+            const offsetPoint = getPointBehind(turnPoint, heading, 40)
+            if (!offsetPoint) return null
+
+            const stopSign = await checkForStopSignAtPoint(offsetPoint, heading)
+            if (stopSign) {
+                return { avoidZone: createBoundingBox(turnPoint, 20), actionIndex: index }
             }
         }
         return null
@@ -95,7 +97,7 @@ async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
     return getRoutes(start, end, {
         transportMode: 'car',
         routingMode: 'short',
-        alternatives: 3,
+        // alternatives: 3,
         return: ['turnByTurnActions', 'summary', "polyline"],
     })
 }
