@@ -3,34 +3,12 @@
  * Low-level SDK wrapper for route calculation
  */
 
-import type {
-  Route,
-  RouteAction,
-  RouteIncident,
-  RoutePoint,
-  RouteReturnType,
-  RouteSection,
-  RouteSpan,
-  RouteSpanType,
-  RoutingOptions,
-  RoutingResult,
-} from '@/entities'
+import type { Route, RoutingOptions, RoutingResult } from '@/entities'
 
 import { getPlatform } from './platform'
 
 // Re-export types for convenience (backwards compatibility)
-export type {
-  RoutePoint,
-  Route,
-  RouteSection,
-  RouteAction,
-  RouteIncident,
-  RouteSpan,
-  RoutingOptions,
-  RoutingResult,
-  RouteReturnType,
-  RouteSpanType,
-}
+export type { Route, RoutingResult }
 
 /** Calculate a route between two points using HERE Routing API v8 */
 export async function calculateRoute(options: RoutingOptions): Promise<RoutingResult> {

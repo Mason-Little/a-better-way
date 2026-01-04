@@ -15,19 +15,3 @@ export function formatDuration(seconds: number): string {
   }
   return `${minutes} min`
 }
-
-/**
- * Format time saved as a human-readable string
- */
-export function formatTimeSaved(seconds: number): string {
-  if (seconds < 60) {
-    return `${Math.round(seconds)} sec`
-  }
-  const minutes = Math.round(seconds / 60)
-  if (minutes < 60) {
-    return `${minutes} min`
-  }
-  const hours = Math.floor(minutes / 60)
-  const remainingMins = minutes % 60
-  return remainingMins > 0 ? `${hours}h ${remainingMins}m` : `${hours}h`
-}

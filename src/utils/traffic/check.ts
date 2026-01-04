@@ -5,6 +5,7 @@
 import type { Route } from '@/entities'
 import type { FlowItem } from '@/entities/traffic'
 import { fetchTrafficFlow } from '@/lib/here-sdk/traffic'
+
 import { hasTraffic } from './analysis'
 
 /**

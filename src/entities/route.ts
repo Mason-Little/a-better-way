@@ -11,7 +11,7 @@ const RoadInfoSchema = z.object({
   number: z.array(z.object({ value: z.string(), language: z.string() })).optional(),
 })
 
-export const RouteActionSchema = z
+const RouteActionSchema = z
   .object({
     action: z.string().describe("Type of action (e.g., 'depart', 'arrive', 'turn')"),
     duration: z.number().describe('Duration in seconds'),
@@ -27,7 +27,7 @@ export const RouteActionSchema = z
   })
   .describe('Action/maneuver on the route')
 
-export const RouteIncidentSchema = z
+const RouteIncidentSchema = z
   .object({
     id: z.string().describe('Incident ID'),
     type: z.string().describe("Type (e.g., 'accident', 'construction')"),
@@ -44,7 +44,7 @@ const DynamicSpeedInfoSchema = z.object({
   jamFactor: z.number().optional().describe('Jam factor (0-10)'),
 })
 
-export const RouteSpanSchema = z
+const RouteSpanSchema = z
   .object({
     offset: z.number().describe('Offset in polyline where span starts'),
     functionalClass: z.number().optional().describe('Road class (1=highway, 5=local)'),
@@ -66,7 +66,7 @@ const PlaceLocationSchema = z.object({
   place: z.object({ location: RoutePointSchema }),
 })
 
-export const RouteSectionSchema = z
+const RouteSectionSchema = z
   .object({
     id: z.string().describe('Unique section ID'),
     type: z.string().describe("Section type (e.g., 'vehicle')"),
@@ -98,9 +98,4 @@ export const RouteSpanTypeSchema = z
   .describe('Span types for detailed segment data')
 
 export type RouteAction = z.infer<typeof RouteActionSchema>
-export type RouteIncident = z.infer<typeof RouteIncidentSchema>
-export type RouteSpan = z.infer<typeof RouteSpanSchema>
-export type RouteSection = z.infer<typeof RouteSectionSchema>
 export type Route = z.infer<typeof RouteSchema>
-export type RouteReturnType = z.infer<typeof RouteReturnTypeSchema>
-export type RouteSpanType = z.infer<typeof RouteSpanTypeSchema>

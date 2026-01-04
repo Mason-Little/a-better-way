@@ -26,10 +26,3 @@ export function getPlatform(): H.service.Platform {
 
   return platformInstance
 }
-
-/**
- * Reset the platform instance (useful for testing or re-initialization)
- */
-export function resetPlatform(): void {
-  platformInstance = null
-}

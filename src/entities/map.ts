@@ -4,7 +4,7 @@
 
 import { z } from 'zod/v4'
 
-export const MapOptionsSchema = z
+const MapOptionsSchema = z
   .object({
     container: z.union([z.instanceof(HTMLElement), z.string()]).describe('Container element or ID'),
     center: z.object({ lat: z.number(), lng: z.number() }).optional().describe('Initial center'),
@@ -17,7 +17,7 @@ export const MapOptionsSchema = z
   })
   .describe('Map creation options')
 
-export const MapViewOptionsSchema = z
+const MapViewOptionsSchema = z
   .object({
     center: z.object({ lat: z.number(), lng: z.number() }).optional().describe('Center point'),
     zoom: z.number().optional().describe('Zoom level (1-20)'),

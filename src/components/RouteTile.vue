@@ -3,7 +3,7 @@ import { reactive, ref } from 'vue'
 
 import { clearRoutes, drawRoutes, useMapStore } from '@/stores/mapStore'
 import { searchPlaces, type SearchResult } from '@/lib/here-sdk/search'
-import { getBetterWayRoutes } from '@/utils/routing/better-way'
+import { getBetterWayRoutes } from '@/utils/routing'
 import BetterButton from '@/components/ui/BetterButton.vue'
 import BetterDropdown from '@/components/ui/BetterDropdown.vue'
 import BetterInput from '@/components/ui/BetterInput.vue'

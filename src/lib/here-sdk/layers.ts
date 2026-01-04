@@ -24,11 +24,3 @@ export function createDefaultLayers(options: DefaultLayerOptions = {}) {
     pois: options.pois ?? false,
   })
 }
-
-/**
- * Get the vector normal map layer (primary base layer)
- */
-export function getVectorLayer(options: DefaultLayerOptions = {}) {
-  const layers = createDefaultLayers(options)
-  return layers.vector.normal.map
-}

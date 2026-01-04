@@ -4,7 +4,7 @@
 
 import { z } from 'zod/v4'
 
-export const SearchResultSchema = z
+const SearchResultSchema = z
   .object({
     id: z.string().describe('Result ID'),
     title: z.string().describe('Place title'),

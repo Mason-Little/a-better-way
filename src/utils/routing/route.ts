@@ -3,12 +3,11 @@
  * High-level routing logic that uses the HERE SDK wrapper
  */
 
-import type { Route, RouteInfo, RoutePoint, RouteSection, RoutingOptions } from '@/entities'
+import type { Route, RouteInfo, RoutePoint, RoutingOptions } from '@/entities'
 import { calculateRoute } from '@/lib/here-sdk/route'
 import { formatDistance, formatDuration } from '@/utils/format'
 
 // Re-export types for convenience
-export type { Route, RoutePoint, RouteSection, RoutingOptions, RouteInfo }
 
 /**
  * Calculate route summary from sections

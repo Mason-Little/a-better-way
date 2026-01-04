@@ -4,6 +4,6 @@
 
 export { createBoundingBox, formatBoundingBox } from './bounding-box'
 export { decodePolyline } from './polyline'
-export { msToMph, msToKmh } from './units'
+
 export { calculateBearing } from './bearing'
 export { getPointBehind } from './offset-point'

@@ -9,7 +9,6 @@ import type { MapViewOptions, RoutingResult } from '@/entities'
 import { RouteRenderer } from '@/lib/here-sdk/routeRenderer'
 
 // Re-export type for convenience
-export type { MapViewOptions }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared State
@@ -60,7 +59,7 @@ export function unregisterMap(): void {
 /**
  * Get the current map instance
  */
-export function getMap(): H.Map | null {
+function getMap(): H.Map | null {
   return map.value
 }
 
@@ -82,7 +81,7 @@ export function drawRoutes(result: RoutingResult, selectIndex = 0): void {
 }
 
 /** Select a different route by index */
-export function selectRoute(index: number): void {
+function selectRoute(index: number): void {
   if (!routeRenderer.value) {
     console.warn('[MapStore] No route renderer available')
     return
@@ -115,7 +114,7 @@ export function clearRoutes(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Update the map camera view */
-export function setMapView(options: MapViewOptions): void {
+function setMapView(options: MapViewOptions): void {
   if (!map.value) {
     console.warn('[MapStore] No map available')
     return
@@ -164,7 +163,7 @@ export function setMapView(options: MapViewOptions): void {
 /**
  * Get the current map view state
  */
-export function getMapView(): MapViewOptions | null {
+function getMapView(): MapViewOptions | null {
   if (!map.value) {
     return null
   }

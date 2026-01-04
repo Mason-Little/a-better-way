@@ -8,7 +8,6 @@ import type { MapOptions } from '@/entities'
 import { createDefaultLayers } from './layers'
 
 // Re-export type for convenience
-export type { MapOptions }
 
 // MapInstance remains local since it contains runtime objects (H.Map, etc.)
 export interface MapInstance {

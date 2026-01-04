@@ -14,7 +14,7 @@
 import type { PuckOptions, PuckPosition } from '@/entities'
 
 // Re-export types for convenience
-export type { PuckOptions, PuckPosition }
+export type { PuckPosition }
 
 // Default configuration
 const DEFAULTS: Required<PuckOptions> = {
@@ -408,13 +408,6 @@ export function initPuck(map: H.Map, options?: PuckOptions): Puck {
     defaultPuck.dispose()
   }
   defaultPuck = new Puck(map, options)
-  return defaultPuck
-}
-
-/**
- * Get the default puck instance
- */
-export function getPuck(): Puck | null {
   return defaultPuck
 }
 

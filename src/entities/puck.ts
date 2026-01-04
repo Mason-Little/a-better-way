@@ -4,7 +4,7 @@
 
 import { z } from 'zod/v4'
 
-export const PuckOptionsSchema = z
+const PuckOptionsSchema = z
   .object({
     size: z.number().optional().describe('Puck size in pixels'),
     primaryColor: z.string().optional().describe('Primary color (CSS)'),
@@ -17,7 +17,7 @@ export const PuckOptionsSchema = z
   })
   .describe('Puck styling options')
 
-export const PuckPositionSchema = z
+const PuckPositionSchema = z
   .object({
     lat: z.number().describe('Latitude'),
     lng: z.number().describe('Longitude'),
