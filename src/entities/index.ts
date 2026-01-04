@@ -44,11 +44,15 @@ export {
   TrafficSummarySchema,
   AvoidZoneSchema,
   AvoidZoneOptionsSchema,
+  FlowItemSchema,
+  FlowResponseSchema,
   type Slowdown,
   type LocatedIncident,
   type TrafficSummary,
   type AvoidZone,
   type AvoidZoneOptions,
+  type FlowItem,
+  type FlowResponse,
 } from './traffic'
 
 // Search

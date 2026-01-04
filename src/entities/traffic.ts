@@ -54,8 +54,43 @@ export const AvoidZoneOptionsSchema = z
   })
   .describe('Options for generating avoid zones')
 
+export const FlowItemSchema = z
+  .object({
+    location: z.object({
+      reference: z.object({
+        type: z.string(),
+        id: z.string(),
+        version: z.string(),
+      }),
+      shape: z.object({
+        links: z.array(
+          z.object({
+            points: z.array(z.object({ lat: z.number(), lng: z.number() })),
+          }),
+        ),
+      }),
+    }),
+    currentFlow: z.object({
+      speed: z.number(),
+      speedUncapped: z.number(),
+      freeFlow: z.number(),
+      jamFactor: z.number(),
+      confidence: z.number(),
+      traversability: z.string(),
+    }),
+  })
+  .describe('Traffic flow item')
+
+export const FlowResponseSchema = z
+  .object({
+    results: z.array(FlowItemSchema),
+  })
+  .describe('Traffic flow API response')
+
 export type Slowdown = z.infer<typeof SlowdownSchema>
 export type LocatedIncident = z.infer<typeof LocatedIncidentSchema>
 export type TrafficSummary = z.infer<typeof TrafficSummarySchema>
 export type AvoidZone = z.infer<typeof AvoidZoneSchema>
 export type AvoidZoneOptions = z.infer<typeof AvoidZoneOptionsSchema>
+export type FlowItem = z.infer<typeof FlowItemSchema>
+export type FlowResponse = z.infer<typeof FlowResponseSchema>

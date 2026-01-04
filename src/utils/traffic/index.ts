@@ -3,3 +3,4 @@
  */
 
 export { hasTraffic } from './analysis'
+export { checkTrafficOnRoute } from './check'

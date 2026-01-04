@@ -4,6 +4,7 @@ import { calculateRoute } from '@/lib/here-sdk'
 import { formatBoundingBox } from '@/utils/geo'
 import { getRoutes } from '@/utils/routing/route'
 import { findStopSigns, type StopSignResult } from '@/utils/stoplight'
+import { checkTrafficOnRoute } from '@/utils/traffic'
 
 //TODO: ADD Via Points to
 
@@ -52,6 +53,13 @@ export const getBetterWayRoutes = async (start: RoutePoint, end: RoutePoint) => 
 
   if (routeInfos && routeInfos.length > 0) {
     drawRoutes({ routes: routeInfos.map((routeInfo) => routeInfo.route) })
+
+    // Check traffic for initial routes
+    routeInfos.forEach((info) => {
+      checkTrafficOnRoute(info.route).catch((e) =>
+        console.warn(`[BetterWay] Traffic check failed for route`, e),
+      )
+    })
   }
 
   await new Promise((resolve) => setTimeout(resolve, 5000))
