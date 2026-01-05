@@ -11,7 +11,6 @@ import { checkTrafficOnRoute } from '@/utils/traffic'
 async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
   return getRoutes(start, end, {
     transportMode: 'car',
-    routingMode: 'short',
     // alternatives: 3,
     return: ['turnByTurnActions', 'summary', 'polyline'],
   })

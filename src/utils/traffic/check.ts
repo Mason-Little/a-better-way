@@ -6,6 +6,7 @@ import type { Route } from '@/entities'
 import type { FlowItem } from '@/entities/traffic'
 import { fetchTrafficFlow } from '@/lib/here-sdk/traffic'
 
+import { simplifyPolyline } from '@/utils/geo/polyline'
 import { hasTraffic } from './analysis'
 
 /**
@@ -30,7 +31,11 @@ export async function checkTrafficOnRoute(route: Route) {
     return null
   }
 
-  const flowData = await fetchTrafficFlow(polyline)
+  // Optimize polyline to meet API limits (max 300 points)
+
+  const simplifiedPolyline = simplifyPolyline(polyline)
+
+  const flowData = await fetchTrafficFlow(simplifiedPolyline)
 
   if (flowData?.results) {
     // Filter for jams
