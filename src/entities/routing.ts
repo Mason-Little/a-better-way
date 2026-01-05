@@ -24,6 +24,7 @@ const RoutingOptionsSchema = z
       .object({
         features: z.array(z.string()).optional().describe("Features to avoid (e.g., 'tollRoad')"),
         areas: z.array(z.string()).optional().describe('Bounding boxes to avoid'),
+        segments: z.array(z.string()).optional().describe('Segment IDs to avoid'),
       })
       .optional()
       .describe('Areas/features to avoid'),

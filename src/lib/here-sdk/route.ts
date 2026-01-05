@@ -38,6 +38,7 @@ export async function calculateRoute(options: RoutingOptions): Promise<RoutingRe
     alternatives,
     ...(spanTypes?.length && { spans: spanTypes.join(',') }),
     ...(avoid?.areas?.length && { 'avoid[areas]': avoid.areas.join('|') }),
+    ...(avoid?.segments?.length && { 'avoid[segments]': avoid.segments.join(',') }),
     ...(avoid?.features?.length && { 'avoid[features]': avoid.features.join(',') }),
     ...(via && { via: via.map((p) => `${p.lat},${p.lng}!passThrough=true`) }),
   }

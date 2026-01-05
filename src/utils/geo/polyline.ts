@@ -3,7 +3,6 @@
  * HERE flexible polyline decoding
  */
 
-
 import { decode, encode } from '@here/flexpolyline'
 
 import type { RoutePoint } from '@/entities'

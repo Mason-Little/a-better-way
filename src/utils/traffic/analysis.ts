@@ -8,7 +8,7 @@ import type { Route } from '@/entities'
 /**
  * Check if a route has significant traffic delay
  */
-export function hasTraffic(route: Route, thresholdSeconds = 60): boolean {
+export function hasTraffic(route: Route, thresholdSeconds = 20): boolean {
   if (!route.sections) return false
 
   return route.sections.some((section) => {

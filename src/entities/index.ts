@@ -12,7 +12,12 @@ export { type RouteAction, type Route } from './route'
 export { type RoutingOptions, type RoutingResult, type RouteInfo } from './routing'
 
 // Traffic analysis
-export { type AvoidZone, type FlowResponse } from './traffic'
+export {
+  type AvoidZone,
+  type FlowResponse,
+  type TrafficAvoidanceOptions,
+  type AvoidanceResult,
+} from './traffic'
 
 // Search
 export { type SearchResult } from './search'
