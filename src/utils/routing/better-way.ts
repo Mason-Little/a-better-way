@@ -35,7 +35,6 @@ async function calculateBetterRoute(
     })
 
     if (matchResult.routes && matchResult.routes.length > 0) {
-      console.log(`[BetterWay] Successfully calculated better route`)
       return matchResult.routes
     } else {
       console.warn(`[BetterWay] No routes returned after matching`)
@@ -67,7 +66,6 @@ export const getBetterWayRoutes = async (start: RoutePoint, end: RoutePoint) => 
     }
 
     trafficResults.forEach((result) => {
-      accumulatedAvoid.areas.push(...result.areas)
       accumulatedAvoid.segments.push(...result.segments)
     })
 

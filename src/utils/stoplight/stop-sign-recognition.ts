@@ -27,10 +27,6 @@ export async function detectStopSign(
 ): Promise<boolean> {
   const payload: DetectPayload = { lat: point.lat, lon: point.lng, heading, conf }
 
-  console.log(
-    `[StopSignRecognition] Testing detection at: ${payload.lat}, ${payload.lon}, heading: ${payload.heading}`,
-  )
-
   try {
     const response = await fetch(`${env.VITE_VISION_BASE_URL}/detect`, {
       method: 'POST',
@@ -40,11 +36,11 @@ export async function detectStopSign(
       body: JSON.stringify(payload),
     })
 
-    console.log(`[StopSignRecognition] Detection Status: ${response.status}`)
-
     if (response.status === 200) {
       const result: DetectResponse = await response.json()
-      console.log(`[StopSignRecognition] Stop Sign Detected: ${result.stop_sign_detected}`)
+      console.log(
+        `[StopSignRecognition] Stop Sign Detected: ${result.stop_sign_detected}, ${payload.lat}, ${payload.lon}, ${payload.heading}`,
+      )
       return result.stop_sign_detected
     } else if (response.status === 404) {
       const errorData = await response.json()
