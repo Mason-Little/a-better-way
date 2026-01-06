@@ -1,4 +1,5 @@
 import type { RoutePoint } from '@/entities/'
+import { env } from '@/lib/environment'
 
 /**
  * Stop Sign Detector API Client
@@ -16,8 +17,6 @@ interface DetectResponse {
   stop_sign_detected: boolean
 }
 
-const BASE_URL = import.meta.env.VITE_VISION_BASE_URL
-
 /**
  * Test the stop sign detection endpoint.
  */
@@ -33,7 +32,7 @@ export async function detectStopSign(
   )
 
   try {
-    const response = await fetch(`${BASE_URL}/detect`, {
+    const response = await fetch(`${env.VITE_VISION_BASE_URL}/detect`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

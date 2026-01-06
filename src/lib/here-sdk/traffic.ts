@@ -4,8 +4,7 @@
  */
 
 import type { FlowResponse } from '@/entities'
-
-const BASE_URL = import.meta.env.VITE_TRAFFIC_BASE_URL
+import { env } from '@/lib/environment'
 
 /**
  * Fetch traffic flow for a route corridor
@@ -14,10 +13,9 @@ export async function fetchTrafficFlow(
   encodedPolyline: string,
   width = 150,
 ): Promise<FlowResponse | null> {
-  const apiKey = import.meta.env.VITE_HERE_API_KEY
-  if (!apiKey) return null
+  const apiKey = env.VITE_HERE_API_KEY
 
-  const url = new URL(BASE_URL)
+  const url = new URL(env.VITE_TRAFFIC_BASE_URL)
   url.searchParams.set('apiKey', apiKey)
 
   try {

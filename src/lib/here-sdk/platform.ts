@@ -3,6 +3,8 @@
  * Singleton that manages the HERE platform instance
  */
 
+import { env } from '@/lib/environment'
+
 let platformInstance: H.service.Platform | null = null
 
 /**
@@ -14,11 +16,7 @@ export function getPlatform(): H.service.Platform {
     return platformInstance
   }
 
-  const apiKey = import.meta.env.VITE_HERE_API_KEY
-
-  if (!apiKey) {
-    throw new Error('HERE API key not found. Please set VITE_HERE_API_KEY in your .env file.')
-  }
+  const apiKey = env.VITE_HERE_API_KEY
 
   platformInstance = new H.service.Platform({
     apikey: apiKey,
