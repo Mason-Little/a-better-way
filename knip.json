@@ -1,0 +1,4 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignore": ["src/lib/here-sdk/types.d.ts"]
+}
