@@ -17,6 +17,8 @@ export {
   type FlowResponse,
   type TrafficAvoidanceOptions,
   type AvoidanceResult,
+  type SegmentRef,
+  type SubSegment,
 } from './traffic'
 
 // Search

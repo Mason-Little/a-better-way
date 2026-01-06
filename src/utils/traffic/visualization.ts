@@ -1,4 +1,4 @@
-import type { FlowResponse } from '@/entities'
+import type { FlowResponse, SubSegment } from '@/entities'
 
 export type TrafficSegment = {
   id: string
@@ -16,6 +16,11 @@ export type TrafficSegment = {
   }
 }
 
+type Link = {
+  points: { lat: number; lng: number }[]
+  length?: number
+}
+
 /**
  * Determine color based on jam factor
  * 0-4: Green (Free flow)
@@ -29,8 +34,51 @@ function getTrafficColor(jamFactor: number): string {
 }
 
 /**
+ * Map links to their corresponding subSegment flow data using length calculations
+ * Returns an array where each index corresponds to a link, containing the subSegment data for that link
+ */
+function mapLinksToSubSegments(links: Link[], subSegments: SubSegment[]): (SubSegment | null)[] {
+  const result: (SubSegment | null)[] = Array.from({ length: links.length }, () => null)
+
+  if (!subSegments?.length) return result
+
+  let linkIdx = 0
+  let linkAccumulatedLength = 0
+  let subSegmentAccumulatedLength = 0
+
+  for (const subSegment of subSegments) {
+    const subSegmentEnd = subSegmentAccumulatedLength + subSegment.length
+
+    // Assign this subSegment to all links that fall within its range
+    while (linkIdx < links.length) {
+      const link = links[linkIdx]
+      if (!link) break
+      const linkLength = 'length' in link ? (link.length as number) : 0
+      const linkEnd = linkAccumulatedLength + linkLength
+
+      // Check if this link is within the current subSegment
+      if (linkAccumulatedLength < subSegmentEnd) {
+        result[linkIdx] = subSegment
+      }
+
+      // Move to next link if we've passed it
+      if (linkEnd <= subSegmentEnd) {
+        linkAccumulatedLength = linkEnd
+        linkIdx++
+      } else {
+        break
+      }
+    }
+
+    subSegmentAccumulatedLength = subSegmentEnd
+  }
+
+  return result
+}
+
+/**
  * Parse Traffic Flow API response for map visualization
- * Simple approach: flatmap all links into individual segments
+ * Uses length-based mapping to correctly assign subSegment flow data to links
  */
 export function parseTrafficFlowForMap(data: FlowResponse): TrafficSegment[] {
   if (!data?.results) return []
@@ -46,32 +94,30 @@ export function parseTrafficFlowForMap(data: FlowResponse): TrafficSegment[] {
     const links = location.shape.links
     const subSegments = currentFlow.subSegments
 
+    // Map links to their corresponding subSegment using length calculations
+    const linkFlowData = subSegments?.length
+      ? mapLinksToSubSegments(links, subSegments)
+      : Array.from({ length: links.length }, () => null)
+
     // Process each link as its own segment
     links.forEach((link, index) => {
       if (!link.points || link.points.length < 2) return
 
-      // Try to get subsegment data if available, otherwise use parent flow
-      const flowData = subSegments?.[index] ?? currentFlow
+      // Use mapped subSegment data if available, otherwise use parent flow
+      const flowData = linkFlowData[index] ?? currentFlow
 
       const jamFactor = flowData.jamFactor
       const speed = flowData.speed
       const freeFlow = flowData.freeFlow
-      const length =
-        'length' in flowData
-          ? (flowData as { length: number }).length
-          : location.length / links.length
+      const length = 'length' in link ? (link.length as number) : location.length / links.length
 
       // Calculate midpoint
       const midIndex = Math.floor(link.points.length / 2)
       const midPoint = link.points[midIndex] ?? link.points[0]!
 
       // Generate ID
-      const refId =
-        item.location.segmentRef?.segments?.[index]?.ref ??
-        item.location.segmentRef?.segments?.[0]?.ref
-      const segmentId = refId
-        ? `seg-${refId}-${index}`
-        : `seg-${Math.random().toString(36).substr(2, 9)}`
+      const refId = item.location.segmentRef?.segments?.[0]?.ref ?? `fallback-${index}`
+      const segmentId = `seg-${refId}-link${index}`
 
       segments.push({
         id: segmentId,
