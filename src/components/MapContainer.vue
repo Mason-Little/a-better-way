@@ -12,7 +12,6 @@ onMounted(() => {
 
   mapInstance = createMap({
     container: mapContainer.value,
-    zoom: 15,
     tilt: 25,
     heading: 0,
     interactive: true,

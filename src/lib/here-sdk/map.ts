@@ -23,8 +23,8 @@ export interface MapInstance {
 export function createMap(options: MapOptions): MapInstance {
   const {
     container,
-    center = { lat: 49.7016, lng: -123.1558 }, // Squamish default
-    zoom = 14,
+    center = { lat: 49.2827, lng: -123.1207 }, // Vancouver default
+    zoom = 12,
     tilt = 45,
     heading = 0,
     interactive = true,
