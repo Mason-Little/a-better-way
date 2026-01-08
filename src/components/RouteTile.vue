@@ -8,7 +8,7 @@ import BetterButton from '@/components/ui/BetterButton.vue'
 import BetterDropdown from '@/components/ui/BetterDropdown.vue'
 import BetterInput from '@/components/ui/BetterInput.vue'
 
-const { currentRoutes, isLoadingRoutes } = useMapStore()
+const { currentRoutes, isLoadingRoutes, trafficEnabled, toggleTraffic } = useMapStore()
 
 const startLocation = reactive({
   address: '',
@@ -91,8 +91,25 @@ const handleEndSearch = async (query: string) => {
   >
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-lg font-bold text-gray-800">Plan your trip</h2>
-      <div class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
-        Best Route
+      <div class="flex items-center gap-3">
+        <button
+          @click="toggleTraffic"
+          class="flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+          :class="
+            trafficEnabled
+              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          "
+        >
+          <div
+            class="h-2 w-2 rounded-full"
+            :class="trafficEnabled ? 'bg-green-500' : 'bg-gray-400'"
+          />
+          Traffic
+        </button>
+        <div class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
+          Best Route
+        </div>
       </div>
     </div>
 

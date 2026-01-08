@@ -12,6 +12,7 @@ export interface MapInstance {
   map: H.Map
   behavior: H.mapevents.Behavior | null
   ui: H.ui.UI | null
+  layers: H.service.Platform.DefaultLayers
   dispose: () => void
 }
 
@@ -92,6 +93,7 @@ export function createMap(options: MapOptions): MapInstance {
     map,
     behavior,
     ui,
+    layers: defaultLayers,
     dispose,
   }
 }

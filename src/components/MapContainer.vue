@@ -19,7 +19,7 @@ onMounted(() => {
   })
 
   // Register map with store for route rendering
-  registerMap(mapInstance.map)
+  registerMap(mapInstance)
 })
 
 onUnmounted(() => {

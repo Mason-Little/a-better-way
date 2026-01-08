@@ -7,6 +7,8 @@ import type { SearchResult } from '@/entities'
 
 import { getPlatform } from './platform'
 
+export type { SearchResult }
+
 /** Search for places using HERE Autosuggest API */
 export async function searchPlaces(
   query: string,

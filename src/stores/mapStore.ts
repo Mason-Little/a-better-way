@@ -15,6 +15,9 @@ import { RouteRenderer } from '@/lib/here-sdk/routeRenderer'
 /** The shared HERE Map instance */
 const map = shallowRef<H.Map | null>(null)
 
+/** The default layers collection */
+const defaultLayers = shallowRef<H.service.Platform.DefaultLayers | null>(null)
+
 /** The route renderer instance */
 const routeRenderer = shallowRef<RouteRenderer | null>(null)
 
@@ -27,6 +30,9 @@ const selectedRouteIndex = ref(0)
 /** Loading state for route calculation */
 const isLoadingRoutes = ref(false)
 
+/** Traffic layer enabled state */
+const trafficEnabled = ref(false)
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Map Management
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,9 +40,19 @@ const isLoadingRoutes = ref(false)
 /**
  * Register the map instance (call from MapContainer onMounted)
  */
-export function registerMap(mapInstance: H.Map): void {
-  map.value = mapInstance
-  routeRenderer.value = new RouteRenderer(mapInstance)
+export function registerMap(instance: {
+  map: H.Map
+  layers: H.service.Platform.DefaultLayers
+}): void {
+  map.value = instance.map
+  defaultLayers.value = instance.layers
+  routeRenderer.value = new RouteRenderer(instance.map)
+
+  // Restore traffic state if needed
+  if (trafficEnabled.value) {
+    enableTraffic()
+  }
+
   console.log('[MapStore] Map registered, renderers initialized')
 }
 
@@ -49,8 +65,10 @@ export function unregisterMap(): void {
     routeRenderer.value = null
   }
   map.value = null
+  defaultLayers.value = null
   currentRoutes.value = null
   selectedRouteIndex.value = 0
+  trafficEnabled.value = false
   console.log('[MapStore] Map unregistered')
 }
 
@@ -59,6 +77,42 @@ export function unregisterMap(): void {
  */
 function getMap(): H.Map | null {
   return map.value
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// specific Traffic Management
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Enable traffic layer */
+function enableTraffic(): void {
+  if (!map.value || !defaultLayers.value) return
+
+  // Traffic layers are under vector.traffic, not vector.normal
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const trafficLayer = (defaultLayers.value.vector as any).traffic.map
+  map.value.addLayer(trafficLayer)
+  trafficEnabled.value = true
+  console.log('[MapStore] Traffic layer enabled')
+}
+
+/** Disable traffic layer */
+function disableTraffic(): void {
+  if (!map.value || !defaultLayers.value) return
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const trafficLayer = (defaultLayers.value.vector as any).traffic.map
+  map.value.removeLayer(trafficLayer)
+  trafficEnabled.value = false
+  console.log('[MapStore] Traffic disabled')
+}
+
+/** Toggle traffic layer */
+function toggleTraffic(): void {
+  if (trafficEnabled.value) {
+    disableTraffic()
+  } else {
+    enableTraffic()
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -203,5 +257,11 @@ export function useMapStore() {
     // Camera control
     setMapView,
     getMapView,
+
+    // Traffic
+    trafficEnabled,
+    enableTraffic,
+    disableTraffic,
+    toggleTraffic,
   }
 }
