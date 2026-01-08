@@ -1,5 +1,5 @@
 import type { BoundingBox, Route, RoutePoint } from '@/entities'
-import { drawRoutes } from '@/stores/mapStore'
+import { useRoutesStore } from '@/stores/routesStore'
 import { calculateRoute } from '@/lib/here-sdk'
 import { formatBoundingBox } from '@/utils/geo'
 import { getRoutes } from '@/utils/routing/route'
@@ -9,6 +9,7 @@ import { findTrafficAvoidance } from '@/utils/traffic'
 async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
   return getRoutes(start, end, {
     transportMode: 'car',
+    alternatives: 2,
     return: ['turnByTurnActions', 'summary', 'polyline'],
   })
 }
@@ -43,11 +44,12 @@ async function calculateBetterRoute(
 }
 
 export async function getBetterWayRoutes(start: RoutePoint, end: RoutePoint) {
+  const { setRoutes } = useRoutesStore()
   const routeInfos = await findInitialRoutes(start, end)
   const improvedRoutes: Route[] = []
 
   if (routeInfos?.length) {
-    drawRoutes({ routes: routeInfos.map((info) => info.route) })
+    setRoutes(routeInfos.map((i) => i.route))
 
     const [trafficResults, stopSignResults] = await Promise.all([
       Promise.all(routeInfos.map((info) => findTrafficAvoidance(info.route))),
@@ -64,7 +66,6 @@ export async function getBetterWayRoutes(start: RoutePoint, end: RoutePoint) {
     const processed = await calculateBetterRoute(start, end, { segments, stopSignBoxes })
     improvedRoutes.push(...processed)
   }
-
-  console.log(`[BetterWay] Returning ${improvedRoutes.length} improved routes`)
-  return improvedRoutes
+  console.log('[BetterWay] Setting routes:', improvedRoutes)
+  setRoutes(improvedRoutes)
 }

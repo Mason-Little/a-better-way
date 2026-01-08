@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 
-import { clearRoutes, drawRoutes, useMapStore } from '@/stores/mapStore'
+import { useMapStore } from '@/stores/mapStore'
+import { useRoutesStore } from '@/stores/routesStore'
 import { searchPlaces, type SearchResult } from '@/lib/here-sdk/search'
 import { getBetterWayRoutes } from '@/utils/routing'
+import RouteCarousel from '@/components/RouteCarousel.vue'
 import BetterButton from '@/components/ui/BetterButton.vue'
 import BetterDropdown from '@/components/ui/BetterDropdown.vue'
 import BetterInput from '@/components/ui/BetterInput.vue'
 
-const { currentRoutes, isLoadingRoutes, trafficEnabled, toggleTraffic } = useMapStore()
+const { isLoadingRoutes, trafficEnabled, toggleTraffic } = useMapStore()
+const { routes, clearRoutes } = useRoutesStore()
 
 const startLocation = reactive({
   address: '',
@@ -34,10 +37,7 @@ const emit = defineEmits<{
 const handleSearch = async () => {
   isLoadingRoutes.value = true
   try {
-    const routes = await getBetterWayRoutes(startLocation.coordinates, endLocation.coordinates)
-    if (routes && routes.length > 0) {
-      drawRoutes({ routes: routes })
-    }
+    await getBetterWayRoutes(startLocation.coordinates, endLocation.coordinates)
   } catch (error) {
     console.error('Failed to find better routes:', error)
   } finally {
@@ -139,11 +139,13 @@ const handleEndSearch = async (query: string) => {
         @select="handleEndSelect"
       />
 
+      <RouteCarousel />
+
       <!-- Actions -->
       <div class="mt-2 grid grid-cols-2 gap-3">
         <BetterButton variant="ghost" size="md" @click="clearRoutes"> clear </BetterButton>
         <BetterButton
-          v-if="!currentRoutes"
+          v-if="!routes.length"
           variant="primary"
           size="md"
           @click="handleSearch"

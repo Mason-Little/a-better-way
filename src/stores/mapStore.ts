@@ -21,12 +21,6 @@ const defaultLayers = shallowRef<H.service.Platform.DefaultLayers | null>(null)
 /** The route renderer instance */
 const routeRenderer = shallowRef<RouteRenderer | null>(null)
 
-/** Currently displayed routes result */
-const currentRoutes = ref<RoutingResult | null>(null)
-
-/** Currently selected route index */
-const selectedRouteIndex = ref(0)
-
 /** Loading state for route calculation */
 const isLoadingRoutes = ref(false)
 
@@ -66,8 +60,6 @@ export function unregisterMap(): void {
   }
   map.value = null
   defaultLayers.value = null
-  currentRoutes.value = null
-  selectedRouteIndex.value = 0
   trafficEnabled.value = false
   console.log('[MapStore] Map unregistered')
 }
@@ -120,45 +112,33 @@ function toggleTraffic(): void {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Draw routes on the map */
-export function drawRoutes(result: RoutingResult, selectIndex = 0): void {
+function drawRoutes(result: RoutingResult, selectIndex = 0): void {
   if (!routeRenderer.value) {
     console.warn('[MapStore] No route renderer available - map not initialized')
     return
   }
 
-  currentRoutes.value = result
-  selectedRouteIndex.value = selectIndex
   routeRenderer.value.drawRoutes(result, selectIndex)
   console.log(`[MapStore] Drew ${result.routes.length} routes, selected index ${selectIndex}`)
 }
 
-/** Select a different route by index */
-function selectRoute(index: number): void {
+/** Set the selected route on the map renderer */
+function setSelectedRouteOnMap(index: number): void {
   if (!routeRenderer.value) {
     console.warn('[MapStore] No route renderer available')
     return
   }
 
-  if (!currentRoutes.value || index >= currentRoutes.value.routes.length) {
-    console.warn(`[MapStore] Invalid route index: ${index}`)
-    return
-  }
-
-  selectedRouteIndex.value = index
   routeRenderer.value.setSelectedRoute(index)
-  console.log(`[MapStore] Selected route ${index}`)
+  console.log(`[MapStore] Set selected route to ${index}`)
 }
 
-/**
- * Clear all routes from the map
- */
-export function clearRoutes(): void {
+/** Clear routes from the map */
+function clearRoutesFromMap(): void {
   if (routeRenderer.value) {
     routeRenderer.value.clearRoutes()
   }
-  currentRoutes.value = null
-  selectedRouteIndex.value = 0
-  console.log('[MapStore] Routes cleared')
+  console.log('[MapStore] Routes cleared from map')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -242,8 +222,6 @@ export function useMapStore() {
   return {
     // Reactive state
     map,
-    currentRoutes,
-    selectedRouteIndex,
     isLoadingRoutes,
 
     // Actions
@@ -251,8 +229,8 @@ export function useMapStore() {
     unregisterMap,
     getMap,
     drawRoutes,
-    selectRoute,
-    clearRoutes,
+    setSelectedRouteOnMap,
+    clearRoutesFromMap,
 
     // Camera control
     setMapView,
