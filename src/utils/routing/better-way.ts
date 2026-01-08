@@ -1,4 +1,4 @@
-import type { AvoidZone, Route, RoutePoint } from '@/entities'
+import type { BoundingBox, Route, RoutePoint } from '@/entities'
 import { drawRoutes } from '@/stores/mapStore'
 import { calculateRoute } from '@/lib/here-sdk'
 import { formatBoundingBox } from '@/utils/geo'
@@ -16,7 +16,7 @@ async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
 async function calculateBetterRoute(
   origin: RoutePoint,
   destination: RoutePoint,
-  avoid: { segments: string[]; stopSignBoxes: AvoidZone[] },
+  avoid: { segments: string[]; stopSignBoxes: BoundingBox[] },
 ): Promise<Route[]> {
   const formattedStopSignAreas = formatBoundingBox(avoid.stopSignBoxes)
 

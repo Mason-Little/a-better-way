@@ -4,25 +4,22 @@
 
 import { z } from 'zod/v4'
 
-const AvoidZoneSchema = z
-  .object({
-    north: z.number().describe('North latitude'),
-    south: z.number().describe('South latitude'),
-    east: z.number().describe('East longitude'),
-    west: z.number().describe('West longitude'),
-  })
-  .describe('A bounding box avoid zone for routing')
-
 const SegmentRefSchema = z.object({
   ref: z.string(),
   length: z.number(),
 })
 
-const SubSegmentSchema = z.object({
-  length: z.number(),
-  speed: z.number(),
-  freeFlow: z.number(),
-  jamFactor: z.number(),
+/**
+ * Base traffic flow data - shared structure for speed/flow metrics
+ */
+const TrafficFlowDataSchema = z.object({
+  speed: z.number().describe('Current speed in m/s'),
+  freeFlow: z.number().describe('Free flow speed in m/s'),
+  jamFactor: z.number().describe('Jam factor (0-10)'),
+})
+
+const SubSegmentSchema = TrafficFlowDataSchema.extend({
+  length: z.number().describe('Length in meters'),
 })
 
 const FlowItemSchema = z
@@ -47,11 +44,8 @@ const FlowItemSchema = z
       description: z.string().optional(),
       length: z.number(),
     }),
-    currentFlow: z.object({
-      speed: z.number(),
+    currentFlow: TrafficFlowDataSchema.extend({
       speedUncapped: z.number(),
-      freeFlow: z.number(),
-      jamFactor: z.number(),
       confidence: z.number(),
       traversability: z.string(),
       subSegments: z
@@ -74,9 +68,6 @@ const FlowResponseSchema = z
   })
   .describe('Traffic flow API response')
 
-export type AvoidZone = z.infer<typeof AvoidZoneSchema>
+export type TrafficFlowData = z.infer<typeof TrafficFlowDataSchema>
 export type FlowItem = z.infer<typeof FlowItemSchema>
 export type FlowResponse = z.infer<typeof FlowResponseSchema>
-export type AvoidanceResult = {
-  segments: string[]
-}

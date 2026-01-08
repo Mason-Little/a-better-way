@@ -15,15 +15,9 @@
 
 import { onMounted, onUnmounted, ref } from 'vue'
 
+import type { PuckPosition } from '@/entities'
 import { useMapStore } from '@/stores/mapStore'
-import {
-  disposePuck,
-  hidePuck,
-  initPuck,
-  showPuck,
-  updatePuckPosition,
-  type PuckPosition,
-} from '@/lib/here-sdk/puck'
+import { disposePuck, hidePuck, initPuck, showPuck, updatePuckPosition } from '@/lib/here-sdk/puck'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Props

@@ -3,13 +3,13 @@
  * Shared geographic bounding box calculations
  */
 
-import type { AvoidZone, RoutePoint } from '@/entities'
+import type { BoundingBox, RoutePoint } from '@/entities'
 
 /**
- * Create a bounding box (AvoidZone format) around a point
+ * Create a bounding box around a point
  * Returns {north, south, east, west} object
  */
-export function createBoundingBox(point: RoutePoint, radiusMeters: number): AvoidZone {
+export function createBoundingBox(point: RoutePoint, radiusMeters: number): BoundingBox {
   // Approximate degrees per meter (varies by latitude, but close enough for small radii)
   const latDegPerMeter = 1 / 111320
   const lngDegPerMeter = 1 / (111320 * Math.cos((point.lat * Math.PI) / 180))
@@ -25,6 +25,6 @@ export function createBoundingBox(point: RoutePoint, radiusMeters: number): Avoi
   }
 }
 
-export function formatBoundingBox(zones: AvoidZone[]): string[] {
+export function formatBoundingBox(zones: BoundingBox[]): string[] {
   return zones.map((z) => `bbox:${z.west},${z.south},${z.east},${z.north}`)
 }

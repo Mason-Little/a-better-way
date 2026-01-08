@@ -1,9 +1,13 @@
-import type { AvoidanceResult, Route } from '@/entities'
+import type { Route } from '@/entities'
 import { fetchTrafficFlow } from '@/lib/here-sdk/traffic'
 import { simplifyPolyline } from '@/utils/geo/polyline'
 
 import { hasTraffic } from './analysis'
 import { getCongestedSegments } from './avoidance'
+
+export type AvoidanceResult = {
+  segments: string[]
+}
 
 async function fetchRouteTrafficFlow(route: Route) {
   const likelyTraffic = hasTraffic(route)

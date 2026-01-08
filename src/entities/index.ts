@@ -3,7 +3,10 @@
  */
 
 // Geographic primitives
-export { type RoutePoint } from './geo'
+export { type RoutePoint, type BoundingBox } from './geo'
+
+// Stoplight/Stop Sign
+export { type StopSignResult } from './stoplight'
 
 // Route structures
 export { type RouteAction, type Route } from './route'

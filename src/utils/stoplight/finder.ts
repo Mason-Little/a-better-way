@@ -1,12 +1,7 @@
-import type { AvoidZone, Route, RouteAction, RoutePoint } from '@/entities'
+import type { Route, RouteAction, RoutePoint, StopSignResult } from '@/entities'
 import { calculateBearing, createBoundingBox, decodePolyline, getPointBehind } from '@/utils/geo'
 
 import { detectStopSign } from './stop-sign-recognition'
-
-export type StopSignResult = {
-  avoidZone: AvoidZone
-  actionIndex: number
-}
 
 function isSharpLeftTurn(action: RouteAction): boolean {
   return (

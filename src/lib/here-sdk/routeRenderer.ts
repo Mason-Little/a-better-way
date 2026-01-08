@@ -12,7 +12,7 @@
  * - Automatic viewport fitting to selected route
  */
 
-import type { Route, RoutingResult } from './route'
+import type { Route, RoutingResult } from '@/entities'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Style Configuration
