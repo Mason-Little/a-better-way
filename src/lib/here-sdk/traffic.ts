@@ -30,7 +30,7 @@ export async function fetchTrafficFlow(
           corridor: encodedPolyline,
           radius: width,
         },
-        locationReferencing: ['segmentRef', 'shape'],
+        locationReferencing: ['segmentRef'],
         advancedFeatures: ['deepCoverage'],
       }),
     })

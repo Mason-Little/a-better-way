@@ -13,9 +13,6 @@
 
 import type { PuckOptions, PuckPosition } from '@/entities'
 
-// Re-export types for convenience
-export type { PuckPosition }
-
 // Default configuration
 const DEFAULTS: Required<PuckOptions> = {
   size: 24,

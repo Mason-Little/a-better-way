@@ -7,10 +7,6 @@ import { ref, shallowRef } from 'vue'
 
 import type { MapViewOptions, RoutingResult } from '@/entities'
 import { RouteRenderer } from '@/lib/here-sdk/routeRenderer'
-import { TrafficRenderer } from '@/lib/here-sdk/trafficRenderer'
-import type { TrafficSegment } from '@/utils/traffic/visualization'
-
-// Re-export type for convenience
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared State
@@ -21,9 +17,6 @@ const map = shallowRef<H.Map | null>(null)
 
 /** The route renderer instance */
 const routeRenderer = shallowRef<RouteRenderer | null>(null)
-
-/** The traffic renderer instance */
-const trafficRenderer = shallowRef<TrafficRenderer | null>(null)
 
 /** Currently displayed routes result */
 const currentRoutes = ref<RoutingResult | null>(null)
@@ -44,7 +37,6 @@ const isLoadingRoutes = ref(false)
 export function registerMap(mapInstance: H.Map): void {
   map.value = mapInstance
   routeRenderer.value = new RouteRenderer(mapInstance)
-  trafficRenderer.value = new TrafficRenderer(mapInstance)
   console.log('[MapStore] Map registered, renderers initialized')
 }
 
@@ -113,28 +105,6 @@ export function clearRoutes(): void {
   currentRoutes.value = null
   selectedRouteIndex.value = 0
   console.log('[MapStore] Routes cleared')
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Traffic Rendering
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** Draw traffic segments on the map */
-function drawTraffic(segments: TrafficSegment[]): void {
-  if (!trafficRenderer.value) {
-    console.warn('[MapStore] No traffic renderer available - map not initialized')
-    return
-  }
-  trafficRenderer.value.renderSegments(segments)
-  console.log(`[MapStore] Drew ${segments.length} traffic segments`)
-}
-
-/** Clear all traffic segments from the map */
-function clearTraffic(): void {
-  if (trafficRenderer.value) {
-    trafficRenderer.value.clear()
-  }
-  console.log('[MapStore] Traffic cleared')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -233,9 +203,5 @@ export function useMapStore() {
     // Camera control
     setMapView,
     getMapView,
-
-    // Traffic visualization
-    drawTraffic,
-    clearTraffic,
   }
 }

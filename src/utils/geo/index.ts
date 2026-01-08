@@ -3,6 +3,7 @@
  */
 
 export { createBoundingBox, formatBoundingBox } from './bounding-box'
+
 export { decodePolyline } from './polyline'
 
 export { calculateBearing } from './bearing'

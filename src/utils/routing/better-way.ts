@@ -1,4 +1,4 @@
-import type { AvoidanceResult, AvoidZone, Route, RoutePoint } from '@/entities'
+import type { AvoidZone, Route, RoutePoint } from '@/entities'
 import { drawRoutes } from '@/stores/mapStore'
 import { calculateRoute } from '@/lib/here-sdk'
 import { formatBoundingBox } from '@/utils/geo'
@@ -6,12 +6,9 @@ import { getRoutes } from '@/utils/routing/route'
 import { findStopSigns } from '@/utils/stoplight'
 import { findTrafficAvoidance } from '@/utils/traffic'
 
-//TODO: ADD Via Points to
-
 async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
   return getRoutes(start, end, {
     transportMode: 'car',
-    // alternatives: 3,
     return: ['turnByTurnActions', 'summary', 'polyline'],
   })
 }
@@ -19,65 +16,52 @@ async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
 async function calculateBetterRoute(
   origin: RoutePoint,
   destination: RoutePoint,
-  avoid: { areas: AvoidZone[]; segments: string[] },
+  avoid: { segments: string[]; stopSignBoxes: AvoidZone[] },
 ): Promise<Route[]> {
-  const avoidAreas = formatBoundingBox(avoid.areas)
+  const formattedStopSignAreas = formatBoundingBox(avoid.stopSignBoxes)
 
   try {
     const matchResult = await calculateRoute({
       origin,
       destination,
       avoid: {
-        areas: avoidAreas,
         segments: avoid.segments,
+        areas: formattedStopSignAreas,
       },
       transportMode: 'car',
     })
 
-    if (matchResult.routes && matchResult.routes.length > 0) {
+    if (matchResult.routes?.length) {
       return matchResult.routes
-    } else {
-      console.warn(`[BetterWay] No routes returned after matching`)
-      return []
     }
+    console.warn('[BetterWay] No routes returned after matching')
+    return []
   } catch (e) {
-    console.warn(`[BetterWay] Failed to match better route:`, e)
+    console.warn('[BetterWay] Failed to match better route:', e)
     return []
   }
 }
 
-export const getBetterWayRoutes = async (start: RoutePoint, end: RoutePoint) => {
+export async function getBetterWayRoutes(start: RoutePoint, end: RoutePoint) {
   const routeInfos = await findInitialRoutes(start, end)
   const improvedRoutes: Route[] = []
 
-  if (routeInfos && routeInfos.length > 0) {
-    drawRoutes({ routes: routeInfos.map((routeInfo) => routeInfo.route) })
+  if (routeInfos?.length) {
+    drawRoutes({ routes: routeInfos.map((info) => info.route) })
 
-    // Collect avoidance data from traffic and stop signs (parallel)
     const [trafficResults, stopSignResults] = await Promise.all([
       Promise.all(routeInfos.map((info) => findTrafficAvoidance(info.route))),
       Promise.all(routeInfos.map((info) => findStopSigns(info.route))),
     ])
 
-    // Accumulate all avoid inputs
-    const accumulatedAvoid: AvoidanceResult = {
-      areas: [],
-      segments: [],
-    }
-
-    trafficResults.forEach((result) => {
-      accumulatedAvoid.segments.push(...result.segments)
-    })
-
-    stopSignResults.flat().forEach((result) => {
-      accumulatedAvoid.areas.push(result.avoidZone)
-    })
+    const segments = trafficResults.flatMap((r) => r.segments)
+    const stopSignBoxes = stopSignResults.flat().map((r) => r.avoidZone)
 
     console.log(
-      `[BetterWay] Collected avoid data: ${accumulatedAvoid.areas.length} areas, ${accumulatedAvoid.segments.length} segments`,
+      `[BetterWay] Collected avoid data: ${segments.length} segments, ${stopSignBoxes.length} stop sign areas`,
     )
 
-    const processed = await calculateBetterRoute(start, end, accumulatedAvoid)
+    const processed = await calculateBetterRoute(start, end, { segments, stopSignBoxes })
     improvedRoutes.push(...processed)
   }
 

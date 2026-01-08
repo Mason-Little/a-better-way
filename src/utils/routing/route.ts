@@ -7,8 +7,6 @@ import type { Route, RouteInfo, RoutePoint, RoutingOptions } from '@/entities'
 import { calculateRoute } from '@/lib/here-sdk/route'
 import { formatDistance, formatDuration } from '@/utils/format'
 
-// Re-export types for convenience
-
 /**
  * Calculate route summary from sections
  */

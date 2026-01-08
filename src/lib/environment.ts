@@ -6,6 +6,7 @@ const environmentSchema = z.object({
   VITE_MAPILLARY_API_BASE: z.string(),
   VITE_VISION_BASE_URL: z.string(),
   VITE_TRAFFIC_BASE_URL: z.string(),
+  VITE_ROUTING_BASE_URL: z.string(),
 })
 
 export const env = environmentSchema.parse(import.meta.env)
