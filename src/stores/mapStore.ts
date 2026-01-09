@@ -130,7 +130,6 @@ function setSelectedRouteOnMap(index: number): void {
   }
 
   routeRenderer.value.setSelectedRoute(index)
-  console.log(`[MapStore] Set selected route to ${index}`)
 }
 
 /** Clear routes from the map */
