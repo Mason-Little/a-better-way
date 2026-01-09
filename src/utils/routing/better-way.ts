@@ -112,6 +112,7 @@ export async function getBetterWayRoutes(
   let iteration = 0
 
   while (iteration < MAX_ITERATIONS) {
+    console.log(`[BetterWay] Iteration ${iteration}`)
     iteration++
 
     // Analyze current routes for traffic and stop signs
@@ -120,6 +121,9 @@ export async function getBetterWayRoutes(
       findStopSigns(currentRoutes),
     ])
 
+    console.log(
+      `[BetterWay] Found ${trafficSegments.length} traffic segments | ${stopSignResults.length} stop signs`,
+    )
     const newStopSignBoxes = stopSignResults.map((r) => r.avoidZone)
 
     // Add to store (deduplication handled by store)
