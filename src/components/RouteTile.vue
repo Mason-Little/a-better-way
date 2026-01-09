@@ -84,7 +84,6 @@ const handleStartSearch = async (query: string) => {
   }
   try {
     startSuggestions.value = await searchPlaces(query)
-    console.log('Start suggestions:', startSuggestions.value)
   } catch (error) {
     console.error('Search failed:', error)
   }
@@ -97,7 +96,6 @@ const handleEndSearch = async (query: string) => {
   }
   try {
     endSuggestions.value = await searchPlaces(query)
-    console.log('End suggestions:', endSuggestions.value)
   } catch (error) {
     console.error('Search failed:', error)
   }

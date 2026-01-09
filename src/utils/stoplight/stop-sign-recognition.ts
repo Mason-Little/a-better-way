@@ -38,13 +38,13 @@ export async function detectStopSign(
 
     if (response.status === 200) {
       const result: DetectResponse = await response.json()
-      console.log(
-        `[StopSignRecognition] Stop Sign Detected: ${result.stop_sign_detected}, ${payload.lat}, ${payload.lon}, ${payload.heading}`,
-      )
+      if (result.stop_sign_detected) {
+        console.log(
+          `[StopSignRecognition] Stop Sign Detected: ${result.stop_sign_detected}, ${payload.lat}, ${payload.lon}, ${payload.heading}`,
+        )
+      }
       return result.stop_sign_detected
     } else if (response.status === 404) {
-      const errorData = await response.json()
-      console.log(`[StopSignRecognition] No panorama found:`, errorData)
       return false
     } else {
       const errorText = await response.text()

@@ -17,7 +17,6 @@ export async function findTrafficAvoidance(
   const store = useRoutesStore()
 
   if (routes.length === 0) {
-    console.log('[Traffic] No routes to analyze')
     return []
   }
 
@@ -34,26 +33,19 @@ export async function findTrafficAvoidance(
   let flowData: FlowResponse | null
 
   if (needsNewFetch) {
-    console.log('[Traffic] Fetching new traffic data for expanded bbox')
     flowData = await fetchTrafficFlowByBbox(mergedBbox)
     store.setTrafficCoverageBbox(mergedBbox)
     store.setCachedTrafficFlow(flowData)
   } else {
-    console.log('[Traffic] Using cached traffic data')
     flowData = store.getCachedTrafficFlow()
   }
 
   // 4. Process segments
   if (!flowData) {
-    console.log('[Traffic] No flow data available')
     return []
   }
 
   const segments = getCongestedSegments(flowData, jamThreshold)
-
-  if (segments.length > 0) {
-    console.log(`[Traffic] Generated ${segments.length} avoidance segments`)
-  }
 
   return segments
 }

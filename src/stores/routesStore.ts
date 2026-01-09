@@ -42,18 +42,13 @@ function setRoutes(newRoutes: Route[]): boolean {
   const uniqueNewRoutes = newRoutes.filter((r) => !existingPolylines.has(r.sections[0]?.polyline))
 
   if (uniqueNewRoutes.length < newRoutes.length) {
-    console.log(
-      `[RoutesStore] Filtered ${newRoutes.length - uniqueNewRoutes.length} duplicate routes`,
-    )
   }
 
   if (uniqueNewRoutes.length === 0) {
-    console.log('[RoutesStore] No new unique routes to add')
     return false
   }
 
   routes.value.push(...uniqueNewRoutes)
-  console.log('[RoutesStore] Set routes:', routes.value.length, 'total')
   const { drawRoutes } = useMapStore()
   drawRoutes({ routes: routes.value })
   return true
@@ -68,7 +63,6 @@ function clearRoutes() {
   selectedRouteIndex.value = 0
   clearRoutesFromMap()
   clearAvoidZones()
-  console.log('[RoutesStore] Routes cleared')
 }
 
 /**
@@ -83,7 +77,6 @@ function selectRoute(index: number) {
   const { setSelectedRouteOnMap } = useMapStore()
   selectedRouteIndex.value = index
   setSelectedRouteOnMap(index)
-  console.log(`[RoutesStore] Selected route ${index}`)
 }
 
 /**
@@ -93,9 +86,6 @@ function addAvoidSegments(segments: PrioritizedSegment[]) {
   const existingIds = new Set(avoidSegments.value.map((s) => s.id))
   const newSegments = segments.filter((s) => !existingIds.has(s.id))
   avoidSegments.value.push(...newSegments)
-  console.log(
-    `[RoutesStore] Added ${newSegments.length} new avoid segments (total: ${avoidSegments.value.length})`,
-  )
 }
 
 /**
@@ -103,9 +93,6 @@ function addAvoidSegments(segments: PrioritizedSegment[]) {
  */
 function addAvoidStopSignBoxes(boxes: BoundingBox[]) {
   avoidStopSignBoxes.value.push(...boxes)
-  console.log(
-    `[RoutesStore] Added ${boxes.length} stop sign boxes (total: ${avoidStopSignBoxes.value.length})`,
-  )
 }
 
 /**
@@ -125,7 +112,6 @@ function getCleanedSegments(maxSegments = 250): string[] {
 function clearAvoidZones() {
   avoidSegments.value = []
   avoidStopSignBoxes.value = []
-  console.log('[RoutesStore] Avoid zones cleared')
 }
 
 /**
@@ -140,7 +126,6 @@ function getTrafficCoverageBbox(): BoundingBox | null {
  */
 function setTrafficCoverageBbox(bbox: BoundingBox): void {
   trafficCoverageBbox.value = bbox
-  console.log('[RoutesStore] Traffic coverage bbox set')
 }
 
 /**
@@ -155,7 +140,6 @@ function getCachedTrafficFlow(): FlowResponse | null {
  */
 function setCachedTrafficFlow(flow: FlowResponse | null): void {
   cachedTrafficFlow.value = flow
-  console.log('[RoutesStore] Traffic flow cached')
 }
 
 /**
@@ -164,7 +148,6 @@ function setCachedTrafficFlow(flow: FlowResponse | null): void {
 function clearTrafficCache(): void {
   trafficCoverageBbox.value = null
   cachedTrafficFlow.value = null
-  console.log('[RoutesStore] Traffic cache cleared')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -46,8 +46,6 @@ export function registerMap(instance: {
   if (trafficEnabled.value) {
     enableTraffic()
   }
-
-  console.log('[MapStore] Map registered, renderers initialized')
 }
 
 /**
@@ -61,7 +59,6 @@ export function unregisterMap(): void {
   map.value = null
   defaultLayers.value = null
   trafficEnabled.value = false
-  console.log('[MapStore] Map unregistered')
 }
 
 /**
@@ -84,7 +81,6 @@ function enableTraffic(): void {
   const trafficLayer = (defaultLayers.value.vector as any).traffic.map
   map.value.addLayer(trafficLayer)
   trafficEnabled.value = true
-  console.log('[MapStore] Traffic layer enabled')
 }
 
 /** Disable traffic layer */
@@ -95,7 +91,6 @@ function disableTraffic(): void {
   const trafficLayer = (defaultLayers.value.vector as any).traffic.map
   map.value.removeLayer(trafficLayer)
   trafficEnabled.value = false
-  console.log('[MapStore] Traffic disabled')
 }
 
 /** Toggle traffic layer */
@@ -119,7 +114,6 @@ function drawRoutes(result: RoutingResult, selectIndex = 0): void {
   }
 
   routeRenderer.value.drawRoutes(result, selectIndex)
-  console.log(`[MapStore] Drew ${result.routes.length} routes, selected index ${selectIndex}`)
 }
 
 /** Set the selected route on the map renderer */
@@ -137,7 +131,6 @@ function clearRoutesFromMap(): void {
   if (routeRenderer.value) {
     routeRenderer.value.clearRoutes()
   }
-  console.log('[MapStore] Routes cleared from map')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -187,8 +180,6 @@ function setMapView(options: MapViewOptions): void {
       })
     }
   }
-
-  console.log('[MapStore] Map view updated:', options)
 }
 
 /**

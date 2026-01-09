@@ -98,8 +98,9 @@ export async function getBetterWayRoutes(
   const baselineDelay = getRouteDelay(bestInitialRoute)
   const baselineEta = bestInitialRoute.sections[0]?.summary.duration ?? 0
   const targetEta = baselineEta + etaMargin
+
   console.log(
-    `[BetterWay] Baseline delay: ${Math.round(baselineDelay / 60)} min, ETA: ${Math.round(baselineEta / 60)} min, target max ETA: ${Math.round(targetEta / 60)} min`,
+    `[BetterWay] Starting with ${initialRoutes.length} routes | ETA: ${Math.round(baselineEta / 60)}min | Delay: ${Math.round(baselineDelay / 60)}min | Max ETA: ${Math.round(targetEta / 60)}min`,
   )
 
   // Show the initial routes first
@@ -108,10 +109,11 @@ export async function getBetterWayRoutes(
   let currentRoutes = initialRoutes
   let bestRoute = bestInitialRoute
   let iteration = 0
+  let totalTrafficSegments = 0
+  let totalStopSigns = 0
 
   while (iteration < MAX_ITERATIONS) {
     iteration++
-    console.log(`[BetterWay] Iteration ${iteration}/${MAX_ITERATIONS}`)
 
     // Analyze current routes for traffic and stop signs
     const [trafficSegments, stopSignResults] = await Promise.all([
@@ -120,6 +122,8 @@ export async function getBetterWayRoutes(
     ])
 
     const newStopSignBoxes = stopSignResults.map((r) => r.avoidZone)
+    totalTrafficSegments += trafficSegments.length
+    totalStopSigns += newStopSignBoxes.length
 
     // Add to store (deduplication handled by store)
     addAvoidSegments(trafficSegments)
@@ -127,7 +131,7 @@ export async function getBetterWayRoutes(
 
     // No new avoid zones found, we're done
     if (trafficSegments.length === 0 && newStopSignBoxes.length === 0) {
-      console.log('[BetterWay] No new avoid zones found, stopping iteration')
+      console.log(`[BetterWay] Early stop: No new avoid zones found (iteration ${iteration})`)
       break
     }
 
@@ -138,7 +142,7 @@ export async function getBetterWayRoutes(
     })
 
     if (!improvedRoutes.length) {
-      console.log('[BetterWay] No improved routes found, keeping current best')
+      console.log(`[BetterWay] Early stop: No improved routes found (iteration ${iteration})`)
       break
     }
 
@@ -149,18 +153,13 @@ export async function getBetterWayRoutes(
       break
     }
 
-    const newDelay = getRouteDelay(newBest)
     const newEta = newBest.sections[0]?.summary.duration ?? 0
-    console.log(
-      `[BetterWay] New best - delay: ${Math.round(newDelay / 60)} min, ETA: ${Math.round(newEta / 60)} min`,
-    )
-    console.log(
-      `[BetterWay] Target max ETA: ${Math.round(targetEta / 60)} min, new ETA: ${Math.round(newEta / 60)} min`,
-    )
 
     // Check if ETA is within acceptable margin
     if (newEta > targetEta) {
-      console.log('[BetterWay] New route exceeds target ETA, keeping previous best')
+      console.log(
+        `[BetterWay] Early stop: ETA ${Math.round(newEta / 60)}min exceeds max ${Math.round(targetEta / 60)}min`,
+      )
       break
     }
 
@@ -170,19 +169,21 @@ export async function getBetterWayRoutes(
 
     const hasNewRoutes = setRoutes(improvedRoutes)
     if (!hasNewRoutes) {
-      console.log('[BetterWay] All routes were duplicates, stopping iteration')
+      console.log(`[BetterWay] Early stop: All routes duplicates (iteration ${iteration})`)
       break
     }
 
     // If we got a route with no delay, we're optimal
     const currentDelay = getRouteDelay(bestRoute)
     if (currentDelay <= 0) {
-      console.log('[BetterWay] Achieved zero delay route, stopping')
+      console.log(`[BetterWay] Early stop: Zero delay achieved (iteration ${iteration})`)
       break
     }
   }
 
+  const finalEta = bestRoute.sections[0]?.summary.duration ?? 0
+  const finalDelay = getRouteDelay(bestRoute)
   console.log(
-    `[BetterWay] Finished after ${iteration} iterations. Final ETA: ${Math.round((bestRoute.sections[0]?.summary.duration ?? 0) / 60)} min`,
+    `[BetterWay] Complete: ${iteration} iterations | Traffic segments: ${totalTrafficSegments} | Stop signs: ${totalStopSigns} | Final ETA: ${Math.round(finalEta / 60)}min (delay: ${Math.round(finalDelay / 60)}min)`,
   )
 }

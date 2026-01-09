@@ -69,8 +69,6 @@ const handlePositionUpdate = (position: GeolocationPosition) => {
     heading: puckPosition.heading,
     animate: true,
   })
-
-  console.log('[UserPuck] Position updated:', puckPosition)
 }
 
 const handlePositionError = (error: GeolocationPositionError) => {
@@ -114,8 +112,6 @@ onMounted(() => {
         heading: initialPosition.heading,
         animate: true,
       })
-
-      console.log('[UserPuck] Puck initialized at:', initialPosition)
     },
     handlePositionError,
     { enableHighAccuracy, maximumAge, timeout },
@@ -127,22 +123,17 @@ onMounted(() => {
     maximumAge,
     timeout,
   })
-
-  console.log('[UserPuck] Started watching position, watchId:', watchId.value)
 })
 
 onUnmounted(() => {
   // Stop watching position
   if (watchId.value !== null) {
     navigator.geolocation.clearWatch(watchId.value)
-    console.log('[UserPuck] Stopped watching position')
   }
 
   // Clean up puck from map
   hidePuck()
   disposePuck()
-
-  console.log('[UserPuck] Disposed')
 })
 </script>
 

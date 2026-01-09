@@ -16,8 +16,6 @@ export async function fetchTrafficFlowByBbox(bbox: BoundingBox): Promise<FlowRes
   const url = new URL(env.VITE_TRAFFIC_BASE_URL)
   url.searchParams.set('apiKey', apiKey)
 
-  console.log('[Traffic] Fetching traffic by bbox:', bbox)
-
   try {
     const res = await fetch(url.toString(), {
       method: 'POST',
@@ -43,7 +41,6 @@ export async function fetchTrafficFlowByBbox(bbox: BoundingBox): Promise<FlowRes
     }
 
     const data = (await res.json()) as FlowResponse
-    console.log(`[Traffic] Bbox fetch returned ${data.results?.length ?? 0} results`)
     return data
   } catch (e) {
     console.error('[Traffic] Bbox fetch error:', e)
