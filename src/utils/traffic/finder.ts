@@ -14,7 +14,12 @@ export async function findTrafficAvoidance(
   routes: Route[],
   jamThreshold = 5,
 ): Promise<PrioritizedSegment[]> {
-  const store = useRoutesStore()
+  const {
+    getTrafficCoverageBbox,
+    setTrafficCoverageBbox,
+    getCachedTrafficFlow,
+    setCachedTrafficFlow,
+  } = useRoutesStore()
 
   if (routes.length === 0) {
     return []
@@ -25,7 +30,7 @@ export async function findTrafficAvoidance(
   const mergedBbox = mergeBoundingBoxes(routeBboxes)
 
   // 2. Check if we need to fetch new traffic data
-  const currentCoverage = store.getTrafficCoverageBbox()
+  const currentCoverage = getTrafficCoverageBbox()
   const needsNewFetch =
     !currentCoverage || !routes.every((r) => isRouteWithinBoundingBox(r, currentCoverage))
 
@@ -34,10 +39,10 @@ export async function findTrafficAvoidance(
 
   if (needsNewFetch) {
     flowData = await fetchTrafficFlowByBbox(mergedBbox)
-    store.setTrafficCoverageBbox(mergedBbox)
-    store.setCachedTrafficFlow(flowData)
+    setTrafficCoverageBbox(mergedBbox)
+    setCachedTrafficFlow(flowData)
   } else {
-    flowData = store.getCachedTrafficFlow()
+    flowData = getCachedTrafficFlow()
   }
 
   // 4. Process segments
