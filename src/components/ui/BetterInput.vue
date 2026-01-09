@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
 
-const model = defineModel<string>({ default: '' })
+const model = defineModel<string | number>({ default: '' })
 
 const {
   placeholder = '',

@@ -29,6 +29,7 @@ const endLocation = reactive({
 })
 const startSuggestions = ref<SearchResult[]>([])
 const endSuggestions = ref<SearchResult[]>([])
+const RouteEtaMargin = ref<number>(10)
 
 const emit = defineEmits<{
   go: []
@@ -37,7 +38,11 @@ const emit = defineEmits<{
 const handleSearch = async () => {
   isLoadingRoutes.value = true
   try {
-    await getBetterWayRoutes(startLocation.coordinates, endLocation.coordinates)
+    await getBetterWayRoutes(
+      startLocation.coordinates,
+      endLocation.coordinates,
+      RouteEtaMargin.value * 60,
+    )
   } catch (error) {
     console.error('Failed to find better routes:', error)
   } finally {
@@ -137,6 +142,12 @@ const handleEndSearch = async (query: string) => {
         v-if="endSuggestions.length > 0"
         :suggestions="endSuggestions"
         @select="handleEndSelect"
+      />
+      <BetterInput
+        v-model.number="RouteEtaMargin"
+        placeholder="ETA margin"
+        label="ETA margin"
+        type="number"
       />
 
       <RouteCarousel />

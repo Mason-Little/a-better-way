@@ -9,9 +9,21 @@ import { findTrafficAvoidance } from '@/utils/traffic'
 async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
   return getRoutes(start, end, {
     transportMode: 'car',
-    alternatives: 2,
+    routingMode: 'short',
+    alternatives: 5,
     return: ['turnByTurnActions', 'summary', 'polyline'],
   })
+}
+
+function getRouteDelay(route: Route): number {
+  const summary = route.sections[0]?.summary
+  if (!summary) return 0
+  return summary.duration - (summary.baseDuration ?? summary.duration)
+}
+
+function calculateLeastDelayRoute(routes: Route[]): Route | undefined {
+  const sorted = [...routes].sort((a, b) => getRouteDelay(a) - getRouteDelay(b))
+  return sorted[0]
 }
 
 async function calculateBetterRoute(
@@ -25,10 +37,12 @@ async function calculateBetterRoute(
     const matchResult = await calculateRoute({
       origin,
       destination,
+      routingMode: 'short',
       avoid: {
         segments: avoid.segments,
         areas: formattedStopSignAreas,
       },
+      alternatives: 5,
       transportMode: 'car',
     })
 
@@ -43,29 +57,125 @@ async function calculateBetterRoute(
   }
 }
 
-export async function getBetterWayRoutes(start: RoutePoint, end: RoutePoint) {
-  const { setRoutes } = useRoutesStore()
+const MAX_ITERATIONS = 5
+
+export async function getBetterWayRoutes(start: RoutePoint, end: RoutePoint, etaMargin: number) {
+  const {
+    setRoutes,
+    clearAvoidZones,
+    addAvoidSegments,
+    addAvoidStopSignBoxes,
+    getCleanedSegments,
+    avoidStopSignBoxes,
+  } = useRoutesStore()
+
+  // Clear any previous avoid zones
+  clearAvoidZones()
+
   const routeInfos = await findInitialRoutes(start, end)
-  const improvedRoutes: Route[] = []
 
-  if (routeInfos?.length) {
-    setRoutes(routeInfos.map((i) => i.route))
+  if (!routeInfos?.length) {
+    console.warn('[BetterWay] No initial routes found')
+    return
+  }
 
-    const [trafficResults, stopSignResults] = await Promise.all([
-      Promise.all(routeInfos.map((info) => findTrafficAvoidance(info.route))),
-      Promise.all(routeInfos.map((info) => findStopSigns(info.route))),
+  // Get route with least delay as baseline
+  const initialRoutes = routeInfos.map((i) => i.route)
+  const bestInitialRoute = calculateLeastDelayRoute(initialRoutes)
+
+  if (!bestInitialRoute) {
+    console.warn('[BetterWay] Could not determine best route')
+    return
+  }
+
+  const baselineDelay = getRouteDelay(bestInitialRoute)
+  const baselineEta = bestInitialRoute.sections[0]?.summary.duration ?? 0
+  const targetEta = baselineEta + etaMargin
+  console.log(
+    `[BetterWay] Baseline delay: ${Math.round(baselineDelay / 60)} min, ETA: ${Math.round(baselineEta / 60)} min, target max ETA: ${Math.round(targetEta / 60)} min`,
+  )
+
+  // Show the initial routes first
+  setRoutes([...initialRoutes])
+
+  let currentRoutes = initialRoutes
+  let bestRoute = bestInitialRoute
+  let iteration = 0
+
+  while (iteration < MAX_ITERATIONS) {
+    iteration++
+    console.log(`[BetterWay] Iteration ${iteration}/${MAX_ITERATIONS}`)
+
+    // Analyze current routes for traffic and stop signs
+    const [trafficSegments, stopSignResults] = await Promise.all([
+      findTrafficAvoidance(currentRoutes),
+      findStopSigns(currentRoutes),
     ])
 
-    const segments = trafficResults.flatMap((r) => r.segments)
-    const stopSignBoxes = stopSignResults.flat().map((r) => r.avoidZone)
+    const newStopSignBoxes = stopSignResults.map((r) => r.avoidZone)
 
+    // Add to store (deduplication handled by store)
+    addAvoidSegments(trafficSegments)
+    addAvoidStopSignBoxes(newStopSignBoxes)
+
+    // No new avoid zones found, we're done
+    if (trafficSegments.length === 0 && newStopSignBoxes.length === 0) {
+      console.log('[BetterWay] No new avoid zones found, stopping iteration')
+      break
+    }
+
+    // Calculate new routes avoiding accumulated zones
+    const improvedRoutes = await calculateBetterRoute(start, end, {
+      segments: getCleanedSegments(),
+      stopSignBoxes: avoidStopSignBoxes.value,
+    })
+
+    if (!improvedRoutes.length) {
+      console.log('[BetterWay] No improved routes found, keeping current best')
+      break
+    }
+
+    // Find the route with least delay
+    const newBest = calculateLeastDelayRoute(improvedRoutes)
+    if (!newBest) {
+      console.log('[BetterWay] Could not determine best improved route')
+      break
+    }
+
+    const newDelay = getRouteDelay(newBest)
+    const newEta = newBest.sections[0]?.summary.duration ?? 0
     console.log(
-      `[BetterWay] Collected avoid data: ${segments.length} segments, ${stopSignBoxes.length} stop sign areas`,
+      `[BetterWay] New best - delay: ${Math.round(newDelay / 60)} min, ETA: ${Math.round(newEta / 60)} min`,
+    )
+    console.log(
+      `[BetterWay] Target max ETA: ${Math.round(targetEta / 60)} min, new ETA: ${Math.round(newEta / 60)} min`,
     )
 
-    const processed = await calculateBetterRoute(start, end, { segments, stopSignBoxes })
-    improvedRoutes.push(...processed)
+    // Check if ETA is within acceptable margin
+    if (newEta > targetEta) {
+      console.log('[BetterWay] New route exceeds target ETA, keeping previous best')
+      break
+    }
+
+    // Update best route and continue iterating
+    bestRoute = newBest
+    currentRoutes = improvedRoutes
+
+    const hasNewRoutes = setRoutes(improvedRoutes)
+    if (!hasNewRoutes) {
+      console.log('[BetterWay] All routes were duplicates, stopping iteration')
+      break
+    }
+
+    // If we got a route with no delay, we're optimal
+    const currentDelay = getRouteDelay(bestRoute)
+    if (currentDelay <= 0) {
+      console.log('[BetterWay] Achieved zero delay route, stopping')
+      break
+    }
   }
-  console.log('[BetterWay] Setting routes:', improvedRoutes)
-  setRoutes(improvedRoutes)
+
+  console.log(
+    `[BetterWay] Finished after ${iteration} iterations. Final ETA: ${Math.round((bestRoute.sections[0]?.summary.duration ?? 0) / 60)} min`,
+  )
 }

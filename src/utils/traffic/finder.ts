@@ -1,13 +1,10 @@
 import type { Route } from '@/entities'
+import type { PrioritizedSegment } from '@/entities/traffic'
 import { fetchTrafficFlow } from '@/lib/here-sdk/traffic'
 import { simplifyPolyline } from '@/utils/geo/polyline'
 
 import { hasTraffic } from './analysis'
 import { getCongestedSegments } from './avoidance'
-
-export type AvoidanceResult = {
-  segments: string[]
-}
 
 async function fetchRouteTrafficFlow(route: Route) {
   const likelyTraffic = hasTraffic(route)
@@ -36,20 +33,23 @@ async function fetchRouteTrafficFlow(route: Route) {
 }
 
 export async function findTrafficAvoidance(
-  route: Route,
+  routes: Route[],
   slowdownThreshold = 0.5,
-): Promise<AvoidanceResult> {
-  const flowData = await fetchRouteTrafficFlow(route)
+): Promise<PrioritizedSegment[]> {
+  const flowDataResults = await Promise.all(routes.map((route) => fetchRouteTrafficFlow(route)))
 
-  if (!flowData) {
-    return { segments: [] }
+  const allSegments: PrioritizedSegment[] = []
+
+  for (const flowData of flowDataResults) {
+    if (flowData) {
+      const segments = getCongestedSegments(flowData, slowdownThreshold)
+      allSegments.push(...segments)
+    }
   }
 
-  const segments = getCongestedSegments(flowData, slowdownThreshold)
-
-  if (segments.length > 0) {
-    console.log(`[Traffic] Generated ${segments.length} avoidance segments`)
+  if (allSegments.length > 0) {
+    console.log(`[Traffic] Generated ${allSegments.length} avoidance segments`)
   }
 
-  return { segments }
+  return allSegments
 }

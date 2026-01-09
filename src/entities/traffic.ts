@@ -68,6 +68,12 @@ const FlowResponseSchema = z
   })
   .describe('Traffic flow API response')
 
+const PrioritizedSegmentSchema = z.object({
+  id: z.string(),
+  priority: z.number(),
+})
+
 export type TrafficFlowData = z.infer<typeof TrafficFlowDataSchema>
 export type FlowItem = z.infer<typeof FlowItemSchema>
 export type FlowResponse = z.infer<typeof FlowResponseSchema>
+export type PrioritizedSegment = z.infer<typeof PrioritizedSegmentSchema>

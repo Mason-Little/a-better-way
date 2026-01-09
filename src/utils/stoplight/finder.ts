@@ -16,7 +16,7 @@ async function checkForStopSignAtPoint(point: RoutePoint, heading: number): Prom
   return await detectStopSign(point, heading)
 }
 
-export async function findStopSigns(route: Route): Promise<StopSignResult[]> {
+async function findStopSignsForRoute(route: Route): Promise<StopSignResult[]> {
   const polylinePoints = decodePolyline(route.sections[0]?.polyline ?? '')
   const turnByTurnActions = route.sections[0]?.turnByTurnActions
   const stopSignResults: StopSignResult[] = []
@@ -48,4 +48,9 @@ export async function findStopSigns(route: Route): Promise<StopSignResult[]> {
   })
 
   return stopSignResults
+}
+
+export async function findStopSigns(routes: Route[]): Promise<StopSignResult[]> {
+  const results = await Promise.all(routes.map((route) => findStopSignsForRoute(route)))
+  return results.flat()
 }
