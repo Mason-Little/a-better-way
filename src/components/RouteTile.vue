@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 import { useMapStore } from '@/stores/mapStore'
 import { useRoutesStore } from '@/stores/routesStore'
@@ -31,6 +31,19 @@ const startSuggestions = ref<SearchResult[]>([])
 const endSuggestions = ref<SearchResult[]>([])
 const RouteEtaMargin = ref<number>(10)
 
+// Traffic Avoidance Settings - jamThreshold uses HERE's jam factor (0-10 scale)
+const jamThreshold = ref<number>(5)
+
+// Computed description for jam threshold
+const jamThresholdDescription = computed(() => {
+  const level = jamThreshold.value
+  if (level <= 2) return 'Aggressive: Avoid even slight slowdowns'
+  if (level <= 4) return 'Sensitive: Avoid light traffic (jam 3+)'
+  if (level <= 6) return 'Balanced: Avoid moderate congestion (jam 5+)'
+  if (level <= 8) return 'Relaxed: Avoid heavy traffic only (jam 7+)'
+  return 'Minimal: Only avoid near-standstill (jam 9+)'
+})
+
 const emit = defineEmits<{
   go: []
 }>()
@@ -42,6 +55,7 @@ const handleSearch = async () => {
       startLocation.coordinates,
       endLocation.coordinates,
       RouteEtaMargin.value * 60,
+      jamThreshold.value,
     )
   } catch (error) {
     console.error('Failed to find better routes:', error)
@@ -149,6 +163,27 @@ const handleEndSearch = async (query: string) => {
         label="ETA margin"
         type="number"
       />
+
+      <!-- Traffic Avoidance Settings -->
+      <div class="mt-2 rounded-xl bg-gray-50/80 p-4 ring-1 ring-gray-200/60">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+            Traffic Tolerance
+          </h3>
+          <span class="text-xs font-semibold text-blue-600"> {{ jamThreshold }}/10 </span>
+        </div>
+        <input
+          v-model.number="jamThreshold"
+          type="range"
+          min="1"
+          max="10"
+          step="1"
+          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+        />
+        <p class="mt-2 text-xs text-gray-500 italic">
+          {{ jamThresholdDescription }}
+        </p>
+      </div>
 
       <RouteCarousel />
 

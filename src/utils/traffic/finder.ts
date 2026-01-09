@@ -12,7 +12,7 @@ import { getCongestedSegments } from './avoidance'
  */
 export async function findTrafficAvoidance(
   routes: Route[],
-  slowdownThreshold = 0.3,
+  jamThreshold = 5,
 ): Promise<PrioritizedSegment[]> {
   const store = useRoutesStore()
 
@@ -49,7 +49,7 @@ export async function findTrafficAvoidance(
     return []
   }
 
-  const segments = getCongestedSegments(flowData, slowdownThreshold)
+  const segments = getCongestedSegments(flowData, jamThreshold)
 
   if (segments.length > 0) {
     console.log(`[Traffic] Generated ${segments.length} avoidance segments`)

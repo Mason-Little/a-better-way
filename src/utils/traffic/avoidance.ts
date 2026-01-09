@@ -1,8 +1,15 @@
-import type { FlowItem, FlowResponse } from '@/entities'
+import type { FlowItem, FlowResponse, TrafficFlowData } from '@/entities'
 import type { PrioritizedSegment } from '@/entities/traffic'
-import { isSlowed } from '@/utils/traffic/slowdown'
 
 import { expandSegmentRef, extractSegmentId } from './segment-parser'
+
+/**
+ * Check if traffic flow exceeds jam factor threshold
+ * jamFactor: 0 = free flow, 10 = standstill
+ */
+function isJammed(flow: Pick<TrafficFlowData, 'jamFactor'>, jamThreshold: number): boolean {
+  return flow.jamFactor >= jamThreshold
+}
 
 /**
  * Calculate priority based on distance from middle
@@ -13,18 +20,34 @@ const calculatePriority = (index: number, totalCount: number): number =>
   Math.floor(Math.abs(index - (totalCount - 1) / 2))
 
 /**
+ * Determine data source based on confidence score
+ */
+function getDataSource(confidence: number): 'realtime' | 'historical' | 'speedLimit' {
+  if (confidence > 0.7) return 'realtime'
+  if (confidence > 0.5) return 'historical'
+  return 'speedLimit'
+}
+
+/**
  * Convert a segment ref to a PrioritizedSegment
  */
 function toPrioritizedSegment(
   seg: { ref: string },
   index: number,
   total: number,
+  confidence: number,
   refReplacements?: Record<string, string>,
 ): PrioritizedSegment | null {
   const expandedRef = expandSegmentRef(seg.ref, refReplacements)
   const segmentId = extractSegmentId(expandedRef)
 
-  return segmentId ? { id: segmentId, priority: calculatePriority(index, total) } : null
+  return segmentId
+    ? {
+        id: segmentId,
+        priority: calculatePriority(index, total),
+        dataSource: getDataSource(confidence),
+      }
+    : null
 }
 
 /**
@@ -34,7 +57,7 @@ function toPrioritizedSegment(
 function extractPrioritizedSegments(
   item: FlowItem,
   refReplacements: Record<string, string>,
-  slowdownThreshold: number,
+  jamThreshold: number,
 ): PrioritizedSegment[] {
   const segmentRefs = item.location.segmentRef?.segments
   if (!segmentRefs?.length) return []
@@ -44,11 +67,19 @@ function extractPrioritizedSegments(
 
   // CASE 1: No subsegments OR all subsegments are jammed.
   // Return all segments with middle-out priority.
-  const allJammed = !hasSubSegments || subSegments.every((sub) => isSlowed(sub, slowdownThreshold))
+  const allJammed = !hasSubSegments || subSegments.every((sub) => isJammed(sub, jamThreshold))
 
   if (allJammed) {
     return segmentRefs
-      .map((seg, i) => toPrioritizedSegment(seg, i, segmentRefs.length, refReplacements))
+      .map((seg, i) =>
+        toPrioritizedSegment(
+          seg,
+          i,
+          segmentRefs.length,
+          item.currentFlow.confidence,
+          refReplacements,
+        ),
+      )
       .filter((s): s is PrioritizedSegment => s !== null)
   }
 
@@ -59,7 +90,7 @@ function extractPrioritizedSegments(
 
   for (const subSegment of subSegments) {
     const subEnd = segCumulative + subSegment.length
-    const isJammed = isSlowed(subSegment, slowdownThreshold)
+    const jammed = isJammed(subSegment, jamThreshold)
     const groupStartIdx = segIdx
 
     // Collect all segments that fall within this subsegment's length
@@ -70,12 +101,13 @@ function extractPrioritizedSegments(
       // If segment starts beyond this subsegment, break
       if (segCumulative >= subEnd) break
 
-      if (isJammed) {
+      if (jammed) {
         const groupSize = segIdx - groupStartIdx + 1
         const prioritized = toPrioritizedSegment(
           seg,
           segIdx - groupStartIdx,
           groupSize,
+          subSegment.confidence,
           refReplacements,
         )
         if (prioritized) results.push(prioritized)
@@ -94,7 +126,7 @@ function extractPrioritizedSegments(
  */
 export function getCongestedSegments(
   data: FlowResponse,
-  slowdownThreshold: number,
+  jamThreshold: number,
 ): PrioritizedSegment[] {
   if (!data?.results) return []
 
@@ -102,9 +134,8 @@ export function getCongestedSegments(
   const segments: PrioritizedSegment[] = []
 
   for (const item of data.results) {
-    const slowed = isSlowed(item.currentFlow, slowdownThreshold)
-    if (!slowed) continue
-    segments.push(...extractPrioritizedSegments(item, refReplacements, slowdownThreshold))
+    if (!isJammed(item.currentFlow, jamThreshold)) continue
+    segments.push(...extractPrioritizedSegments(item, refReplacements, jamThreshold))
   }
 
   return segments

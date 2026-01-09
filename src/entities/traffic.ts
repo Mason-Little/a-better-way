@@ -71,6 +71,7 @@ const FlowResponseSchema = z
 const PrioritizedSegmentSchema = z.object({
   id: z.string(),
   priority: z.number(),
+  dataSource: z.enum(['realtime', 'historical', 'speedLimit']).optional(),
 })
 
 export type TrafficFlowData = z.infer<typeof TrafficFlowDataSchema>

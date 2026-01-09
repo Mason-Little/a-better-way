@@ -59,7 +59,12 @@ async function calculateBetterRoute(
 
 const MAX_ITERATIONS = 5
 
-export async function getBetterWayRoutes(start: RoutePoint, end: RoutePoint, etaMargin: number) {
+export async function getBetterWayRoutes(
+  start: RoutePoint,
+  end: RoutePoint,
+  etaMargin: number,
+  jamThreshold: number,
+) {
   const {
     setRoutes,
     clearAvoidZones,
@@ -110,7 +115,7 @@ export async function getBetterWayRoutes(start: RoutePoint, end: RoutePoint, eta
 
     // Analyze current routes for traffic and stop signs
     const [trafficSegments, stopSignResults] = await Promise.all([
-      findTrafficAvoidance(currentRoutes),
+      findTrafficAvoidance(currentRoutes, jamThreshold),
       findStopSigns(currentRoutes),
     ])
 
