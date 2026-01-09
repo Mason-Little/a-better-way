@@ -109,8 +109,6 @@ export async function getBetterWayRoutes(
   let currentRoutes = initialRoutes
   let bestRoute = bestInitialRoute
   let iteration = 0
-  let totalTrafficSegments = 0
-  let totalStopSigns = 0
 
   while (iteration < MAX_ITERATIONS) {
     iteration++
@@ -122,18 +120,10 @@ export async function getBetterWayRoutes(
     ])
 
     const newStopSignBoxes = stopSignResults.map((r) => r.avoidZone)
-    totalTrafficSegments += trafficSegments.length
-    totalStopSigns += newStopSignBoxes.length
 
     // Add to store (deduplication handled by store)
     addAvoidSegments(trafficSegments)
     addAvoidStopSignBoxes(newStopSignBoxes)
-
-    // No new avoid zones found, we're done
-    if (trafficSegments.length === 0 && newStopSignBoxes.length === 0) {
-      console.log(`[BetterWay] Early stop: No new avoid zones found (iteration ${iteration})`)
-      break
-    }
 
     // Calculate new routes avoiding accumulated zones
     const improvedRoutes = await calculateBetterRoute(start, end, {
@@ -184,6 +174,6 @@ export async function getBetterWayRoutes(
   const finalEta = bestRoute.sections[0]?.summary.duration ?? 0
   const finalDelay = getRouteDelay(bestRoute)
   console.log(
-    `[BetterWay] Complete: ${iteration} iterations | Traffic segments: ${totalTrafficSegments} | Stop signs: ${totalStopSigns} | Final ETA: ${Math.round(finalEta / 60)}min (delay: ${Math.round(finalDelay / 60)}min)`,
+    `[BetterWay] Complete: ${iteration} iterations | Traffic segments: ${getCleanedSegments().length} | Stop signs: ${avoidStopSignBoxes.value.length} | Final ETA: ${Math.round(finalEta / 60)}min (delay: ${Math.round(finalDelay / 60)}min)`,
   )
 }

@@ -30,7 +30,7 @@ export async function fetchTrafficFlowByBbox(bbox: BoundingBox): Promise<FlowRes
           east: bbox.east,
           north: bbox.north,
         },
-        locationReferencing: ['segmentRef'],
+        locationReferencing: ['segmentRef', 'shape'],
         advancedFeatures: ['deepCoverage'],
       }),
     })
