@@ -64,7 +64,7 @@ const FlowItemSchema = z
 const FlowResponseSchema = z
   .object({
     results: z.array(FlowItemSchema),
-    refReplacements: z.record(z.string(), z.string()).optional(),
+    refReplacements: z.record(z.string(), z.string()),
   })
   .describe('Traffic flow API response')
 

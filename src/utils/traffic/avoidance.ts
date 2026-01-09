@@ -43,8 +43,8 @@ function toPrioritizedSegment(
  */
 function extractPrioritizedSegments(
   item: FlowItem,
-  refReplacements?: Record<string, string>,
-  slowdownThreshold = 0.25,
+  refReplacements: Record<string, string>,
+  slowdownThreshold: number,
 ): PrioritizedSegment[] {
   console.log('[DEBUG] extractPrioritizedSegments entry', {
     location: item.location,
@@ -130,7 +130,7 @@ function extractPrioritizedSegments(
  */
 export function getCongestedSegments(
   data: FlowResponse,
-  slowdownThreshold = 0.25,
+  slowdownThreshold: number,
 ): PrioritizedSegment[] {
   console.log('[DEBUG] getCongestedSegments entry', { dataLength: data?.results?.length })
   if (!data?.results) return []

@@ -2,7 +2,13 @@
  * Geo utilities barrel export
  */
 
-export { createBoundingBox, formatBoundingBox } from './bounding-box'
+export {
+  createBoundingBox,
+  formatBoundingBox,
+  computeRouteBoundingBox,
+  mergeBoundingBoxes,
+  isRouteWithinBoundingBox,
+} from './bounding-box'
 
 export { decodePolyline } from './polyline'
 

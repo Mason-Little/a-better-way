@@ -63,14 +63,16 @@ export async function getBetterWayRoutes(start: RoutePoint, end: RoutePoint, eta
   const {
     setRoutes,
     clearAvoidZones,
+    clearTrafficCache,
     addAvoidSegments,
     addAvoidStopSignBoxes,
     getCleanedSegments,
     avoidStopSignBoxes,
   } = useRoutesStore()
 
-  // Clear any previous avoid zones
+  // Clear any previous avoid zones and traffic cache
   clearAvoidZones()
+  clearTrafficCache()
 
   const routeInfos = await findInitialRoutes(start, end)
 

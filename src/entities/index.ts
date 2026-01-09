@@ -17,6 +17,8 @@ export { type RoutingOptions, type RoutingResult, type RouteInfo } from './routi
 // Traffic analysis
 export * from './traffic'
 
+// Route analysis
+
 // Search
 export { type SearchResult } from './search'
 

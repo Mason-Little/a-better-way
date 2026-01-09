@@ -5,7 +5,7 @@
 
 import { ref } from 'vue'
 
-import type { BoundingBox, PrioritizedSegment, Route } from '@/entities'
+import type { BoundingBox, FlowResponse, PrioritizedSegment, Route } from '@/entities'
 import { useMapStore } from '@/stores/mapStore'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -23,6 +23,12 @@ const avoidSegments = ref<PrioritizedSegment[]>([])
 
 /** Accumulated stop sign bounding boxes to avoid */
 const avoidStopSignBoxes = ref<BoundingBox[]>([])
+
+/** Bounding box covering all cached traffic data */
+const trafficCoverageBbox = ref<BoundingBox | null>(null)
+
+/** Cached traffic flow response */
+const cachedTrafficFlow = ref<FlowResponse | null>(null)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Actions
@@ -122,6 +128,45 @@ function clearAvoidZones() {
   console.log('[RoutesStore] Avoid zones cleared')
 }
 
+/**
+ * Get the current traffic coverage bounding box
+ */
+function getTrafficCoverageBbox(): BoundingBox | null {
+  return trafficCoverageBbox.value
+}
+
+/**
+ * Set the traffic coverage bounding box
+ */
+function setTrafficCoverageBbox(bbox: BoundingBox): void {
+  trafficCoverageBbox.value = bbox
+  console.log('[RoutesStore] Traffic coverage bbox set')
+}
+
+/**
+ * Get cached traffic flow data
+ */
+function getCachedTrafficFlow(): FlowResponse | null {
+  return cachedTrafficFlow.value
+}
+
+/**
+ * Set cached traffic flow data
+ */
+function setCachedTrafficFlow(flow: FlowResponse | null): void {
+  cachedTrafficFlow.value = flow
+  console.log('[RoutesStore] Traffic flow cached')
+}
+
+/**
+ * Clear traffic cache (bbox and flow data)
+ */
+function clearTrafficCache(): void {
+  trafficCoverageBbox.value = null
+  cachedTrafficFlow.value = null
+  console.log('[RoutesStore] Traffic cache cleared')
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Composable Hook
 // ─────────────────────────────────────────────────────────────────────────────
@@ -136,6 +181,8 @@ export function useRoutesStore() {
     selectedRouteIndex,
     avoidSegments,
     avoidStopSignBoxes,
+    trafficCoverageBbox,
+    cachedTrafficFlow,
 
     // Actions
     setRoutes,
@@ -145,5 +192,10 @@ export function useRoutesStore() {
     addAvoidStopSignBoxes,
     getCleanedSegments,
     clearAvoidZones,
+    getTrafficCoverageBbox,
+    setTrafficCoverageBbox,
+    getCachedTrafficFlow,
+    setCachedTrafficFlow,
+    clearTrafficCache,
   }
 }

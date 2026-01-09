@@ -1,55 +1,59 @@
-import type { Route } from '@/entities'
+import type { FlowResponse, Route } from '@/entities'
 import type { PrioritizedSegment } from '@/entities/traffic'
-import { fetchTrafficFlow } from '@/lib/here-sdk/traffic'
-import { simplifyPolyline } from '@/utils/geo/polyline'
+import { useRoutesStore } from '@/stores/routesStore'
+import { fetchTrafficFlowByBbox } from '@/lib/here-sdk/traffic'
+import { computeRouteBoundingBox, isRouteWithinBoundingBox, mergeBoundingBoxes } from '@/utils/geo'
 
-import { hasTraffic } from './analysis'
 import { getCongestedSegments } from './avoidance'
 
-async function fetchRouteTrafficFlow(route: Route) {
-  const likelyTraffic = hasTraffic(route)
-
-  if (!likelyTraffic) {
-    console.log('[Traffic] Route analysis indicates no significant traffic.')
-    return null
-  }
-
-  console.log('[Traffic] Significant traffic detected. Fetching detailed flow...')
-
-  const polyline = route.sections?.[0]?.polyline
-  if (!polyline) {
-    console.warn('[Traffic] No polyline found in route section.')
-    return null
-  }
-
-  const simplifiedPolyline = simplifyPolyline(polyline)
-  const flowData = await fetchTrafficFlow(simplifiedPolyline)
-
-  if (flowData?.results) {
-    return flowData
-  }
-
-  return null
-}
-
+/**
+ * Find traffic avoidance segments using a single bounding box query
+ * with intelligent caching to minimize API calls
+ */
 export async function findTrafficAvoidance(
   routes: Route[],
-  slowdownThreshold = 0.5,
+  slowdownThreshold = 0.3,
 ): Promise<PrioritizedSegment[]> {
-  const flowDataResults = await Promise.all(routes.map((route) => fetchRouteTrafficFlow(route)))
+  const store = useRoutesStore()
 
-  const allSegments: PrioritizedSegment[] = []
-
-  for (const flowData of flowDataResults) {
-    if (flowData) {
-      const segments = getCongestedSegments(flowData, slowdownThreshold)
-      allSegments.push(...segments)
-    }
+  if (routes.length === 0) {
+    console.log('[Traffic] No routes to analyze')
+    return []
   }
 
-  if (allSegments.length > 0) {
-    console.log(`[Traffic] Generated ${allSegments.length} avoidance segments`)
+  // 1. Compute merged bounding box from all routes
+  const routeBboxes = routes.map(computeRouteBoundingBox)
+  const mergedBbox = mergeBoundingBoxes(routeBboxes)
+
+  // 2. Check if we need to fetch new traffic data
+  const currentCoverage = store.getTrafficCoverageBbox()
+  const needsNewFetch =
+    !currentCoverage || !routes.every((r) => isRouteWithinBoundingBox(r, currentCoverage))
+
+  // 3. Fetch or use cached
+  let flowData: FlowResponse | null
+
+  if (needsNewFetch) {
+    console.log('[Traffic] Fetching new traffic data for expanded bbox')
+    flowData = await fetchTrafficFlowByBbox(mergedBbox)
+    store.setTrafficCoverageBbox(mergedBbox)
+    store.setCachedTrafficFlow(flowData)
+  } else {
+    console.log('[Traffic] Using cached traffic data')
+    flowData = store.getCachedTrafficFlow()
   }
 
-  return allSegments
+  // 4. Process segments
+  if (!flowData) {
+    console.log('[Traffic] No flow data available')
+    return []
+  }
+
+  const segments = getCongestedSegments(flowData, slowdownThreshold)
+
+  if (segments.length > 0) {
+    console.log(`[Traffic] Generated ${segments.length} avoidance segments`)
+  }
+
+  return segments
 }
