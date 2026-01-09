@@ -38,16 +38,5 @@ const RoutingResultSchema = z
   })
   .describe('Routing API response')
 
-const RouteInfoSchema = z
-  .object({
-    route: RouteSchema.describe('The calculated route'),
-    duration: z.number().describe('Total duration in seconds'),
-    distance: z.number().describe('Total distance in meters'),
-    formattedDuration: z.string().describe('Formatted duration (e.g., "1h 23m")'),
-    formattedDistance: z.string().describe('Formatted distance (e.g., "45.2 km")'),
-  })
-  .describe('Route info with formatted summary')
-
 export type RoutingOptions = z.infer<typeof RoutingOptionsSchema>
 export type RoutingResult = z.infer<typeof RoutingResultSchema>
-export type RouteInfo = z.infer<typeof RouteInfoSchema>

@@ -2,17 +2,19 @@ import type { BoundingBox, Route, RoutePoint } from '@/entities'
 import { useRoutesStore } from '@/stores/routesStore'
 import { calculateRoute } from '@/lib/here-sdk'
 import { formatBoundingBox } from '@/utils/geo'
-import { getRoutes } from '@/utils/routing/route'
 import { findStopSigns } from '@/utils/stoplight'
 import { findTrafficAvoidance } from '@/utils/traffic'
 
 async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
-  return getRoutes(start, end, {
+  const result = await calculateRoute({
+    origin: start,
+    destination: end,
     transportMode: 'car',
     routingMode: 'short',
     alternatives: 5,
     return: ['turnByTurnActions', 'summary', 'polyline'],
   })
+  return result.routes
 }
 
 function getRouteDelay(route: Route): number {
@@ -79,15 +81,14 @@ export async function getBetterWayRoutes(
   clearAvoidZones()
   clearTrafficCache()
 
-  const routeInfos = await findInitialRoutes(start, end)
+  const initialRoutes = await findInitialRoutes(start, end)
 
-  if (!routeInfos?.length) {
+  if (!initialRoutes?.length) {
     console.warn('[BetterWay] No initial routes found')
     return
   }
 
   // Get route with least delay as baseline
-  const initialRoutes = routeInfos.map((i) => i.route)
   const bestInitialRoute = calculateLeastDelayRoute(initialRoutes)
 
   if (!bestInitialRoute) {
