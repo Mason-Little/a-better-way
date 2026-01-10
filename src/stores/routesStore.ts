@@ -7,6 +7,8 @@ import { ref } from 'vue'
 
 import type { BoundingBox, FlowResponse, PrioritizedSegment, Route } from '@/entities'
 import { useMapStore } from '@/stores/mapStore'
+import { doesSegmentIntersectRoute } from '@/utils/geo/intersection'
+import { decodePolyline } from '@/utils/geo/polyline'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared State
@@ -103,11 +105,58 @@ function addAvoidStopSignBoxes(boxes: BoundingBox[]) {
  * Get cleaned segment IDs, sorted by priority and limited to max
  */
 function getCleanedSegments(maxSegments = 250): string[] {
-  const seen = new Set<string>()
-  const sorted = [...avoidSegments.value].sort((a, b) => b.priority - a.priority) // Higher priority (edges) first
-  const unique = sorted.filter((s) => !seen.has(s.id) && seen.add(s.id))
-  const limited = unique.slice(0, maxSegments)
-  return limited.map((s) => s.id)
+  // 1. Deduplicate segments first to avoid redundant intersection checks
+  const uniqueSegments = new Map<string, PrioritizedSegment>()
+  for (const seg of avoidSegments.value) {
+    if (!uniqueSegments.has(seg.id)) {
+      uniqueSegments.set(seg.id, seg)
+    }
+  }
+  const allSegments = Array.from(uniqueSegments.values())
+
+  // 2. Decode all active routes to points
+  const routePointsList = routes.value
+    .map((r) => r.sections[0]?.polyline)
+    .filter((p): p is string => !!p)
+    .map((p) => decodePolyline(p))
+
+  // 3. Separate into intersecting vs non-intersecting
+  const intersecting: PrioritizedSegment[] = []
+  const others: PrioritizedSegment[] = []
+
+  for (const segment of allSegments) {
+    // Check if segment intersects ANY route
+    // Using 20m threshold for "on the route"
+    const isIntersecting = routePointsList.some((points) =>
+      doesSegmentIntersectRoute(segment, points, 20),
+    )
+
+    if (isIntersecting) {
+      intersecting.push(segment)
+    } else {
+      others.push(segment)
+    }
+  }
+
+  // 4. Sort both lists by priority (descending)
+  intersecting.sort((a, b) => b.priority - a.priority)
+  others.sort((a, b) => b.priority - a.priority)
+
+  // 5. Combine: Intersecting first, then others
+  const result: string[] = []
+  const combined = [...intersecting, ...others]
+
+  for (const seg of combined) {
+    if (result.length >= maxSegments) break
+    result.push(seg.id)
+  }
+
+  console.log(
+    `[RoutesStore] Cleaned segments: ${result.length} total. ` +
+      `Intersecting: ${intersecting.length}, Others: ${others.length}`,
+  )
+
+  return result
 }
 
 /**

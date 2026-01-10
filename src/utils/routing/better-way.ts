@@ -10,7 +10,7 @@ async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
     origin: start,
     destination: end,
     transportMode: 'car',
-    routingMode: 'short',
+    routingMode: 'fast',
     alternatives: 5,
     return: ['turnByTurnActions', 'summary', 'polyline'],
   })
@@ -39,7 +39,7 @@ async function calculateBetterRoute(
     const matchResult = await calculateRoute({
       origin,
       destination,
-      routingMode: 'short',
+      routingMode: 'fast',
       avoid: {
         segments: avoid.segments,
         areas: formattedStopSignAreas,
