@@ -50,7 +50,34 @@ async function findStopSignsForRoute(route: Route): Promise<StopSignResult[]> {
   return stopSignResults
 }
 
+/**
+ * Generate a key for a bounding box to identify duplicates
+ * Uses 4 decimal places (~10m accuracy) to handle floating point variations
+ */
+function getBoundingBoxKey(box: {
+  north: number
+  south: number
+  east: number
+  west: number
+}): string {
+  const centerLat = ((box.north + box.south) / 2).toFixed(4)
+  const centerLng = ((box.east + box.west) / 2).toFixed(4)
+  return `${centerLat},${centerLng}`
+}
+
 export async function findStopSigns(routes: Route[]): Promise<StopSignResult[]> {
   const results = await Promise.all(routes.map((route) => findStopSignsForRoute(route)))
-  return results.flat()
+  const allResults = results.flat()
+
+  // Deduplicate by bounding box center point
+  const seen = new Set<string>()
+  const deduped = allResults.filter((result) => {
+    const key = getBoundingBoxKey(result.avoidZone)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  console.log(`[StopSignFinder] Deduplicated ${allResults.length} → ${deduped.length} stop signs`)
+  return deduped
 }

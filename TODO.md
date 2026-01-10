@@ -1,6 +1,6 @@
 ## TODO
 
-- [ ] We need to deduplicate stop signs
+- [x] We need to deduplicate stop signs
 
 - [ ] in a group of routes, we need to find the best route. We also need to remove routes that are bad. We need to do this in a way that is efficient and can be scaled.
 

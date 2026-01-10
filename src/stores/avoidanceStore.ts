@@ -96,10 +96,27 @@ function addTrafficSegments(segments: PrioritizedSegment[]) {
 }
 
 /**
- * Add stop sign bounding boxes to avoid
+ * Generate a unique key for a bounding box based on its coordinates
+ * Using 4 decimal places (~10m accuracy) to handle floating point variations
+ */
+function getBoundingBoxKey(box: BoundingBox): string {
+  return `${box.north.toFixed(4)},${box.south.toFixed(4)},${box.east.toFixed(4)},${box.west.toFixed(4)}`
+}
+
+/**
+ * Add stop sign bounding boxes to avoid (merges with existing, dedupes by coordinates)
  */
 function addStopSignBoxes(boxes: BoundingBox[]) {
-  stopSignBoxes.value.push(...boxes)
+  const existingKeys = new Set(stopSignBoxes.value.map((b) => getBoundingBoxKey(b)))
+  const newBoxes = boxes.filter((b) => !existingKeys.has(getBoundingBoxKey(b)))
+
+  console.log(
+    `[AvoidanceStore] Stop sign dedup: ${boxes.length} incoming → ${newBoxes.length} new (${stopSignBoxes.value.length} existing)`,
+  )
+
+  if (newBoxes.length === 0) return
+
+  stopSignBoxes.value.push(...newBoxes)
   const { drawStopSigns } = useMapStore()
   drawStopSigns(stopSignBoxes.value)
 }
