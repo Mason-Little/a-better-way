@@ -7,8 +7,7 @@ import { ref } from 'vue'
 
 import type { BoundingBox, FlowResponse, PrioritizedSegment, Route } from '@/entities'
 import { useMapStore } from '@/stores/mapStore'
-import { doesSegmentIntersectRoute } from '@/utils/geo/intersection'
-import { decodePolyline } from '@/utils/geo/polyline'
+import { findIntersectingSegments } from '@/utils/geo/intersection'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared State
@@ -114,29 +113,8 @@ function getCleanedSegments(maxSegments = 250): string[] {
   }
   const allSegments = Array.from(uniqueSegments.values())
 
-  // 2. Decode all active routes to points
-  const routePointsList = routes.value
-    .map((r) => r.sections[0]?.polyline)
-    .filter((p): p is string => !!p)
-    .map((p) => decodePolyline(p))
-
-  // 3. Separate into intersecting vs non-intersecting
-  const intersecting: PrioritizedSegment[] = []
-  const others: PrioritizedSegment[] = []
-
-  for (const segment of allSegments) {
-    // Check if segment intersects ANY route
-    // Using 20m threshold for "on the route"
-    const isIntersecting = routePointsList.some((points) =>
-      doesSegmentIntersectRoute(segment, points, 20),
-    )
-
-    if (isIntersecting) {
-      intersecting.push(segment)
-    } else {
-      others.push(segment)
-    }
-  }
+  // 2. Separate into intersecting vs non-intersecting using optimized BBox check
+  const { intersecting, others } = findIntersectingSegments(allSegments, routes.value, 20)
 
   // 4. Sort both lists by priority (descending)
   intersecting.sort((a, b) => b.priority - a.priority)

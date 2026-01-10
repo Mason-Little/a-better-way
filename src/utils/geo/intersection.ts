@@ -3,7 +3,10 @@
  * Determine if geographic entities intersect
  */
 
-import type { PrioritizedSegment, RoutePoint } from '@/entities'
+import type { BoundingBox, PrioritizedSegment, Route, RoutePoint } from '@/entities'
+
+import { computeSegmentBoundingBox, doBoundingBoxesIntersect } from './bounding-box'
+import { decodePolyline } from './polyline'
 
 /**
  * Calculate distance in meters between two points
@@ -83,7 +86,7 @@ function isPointNearPolyline(
  * Check if a traffic segment intersects with a route
  * Uses bounding box pre-check for performance
  */
-export function doesSegmentIntersectRoute(
+function doesSegmentIntersectRoute(
   segment: PrioritizedSegment,
   routePoints: RoutePoint[],
   thresholdMeters: number = 30, // Default to ~30m (road width + GPS error)
@@ -102,4 +105,69 @@ export function doesSegmentIntersectRoute(
   }
 
   return false
+}
+
+/**
+ * Find segments that intersect with any of the given routes
+ * Optimizes using bounding box pre-checks
+ */
+export function findIntersectingSegments(
+  segments: PrioritizedSegment[],
+  routes: Route[],
+  thresholdMeters: number = 20,
+): { intersecting: PrioritizedSegment[]; others: PrioritizedSegment[] } {
+  // 1. Pre-process routes: Decode points and compute BBox once
+  const routeData = routes
+    .map((r) => {
+      const rawPolyline = r.sections[0]?.polyline
+      if (!rawPolyline) return null
+      const points = decodePolyline(rawPolyline)
+      if (points.length === 0) return null
+
+      // Compute refined bbox from points
+      // We do this inline to avoid re-decoding if we used computeRouteBoundingBox
+      // and then decoded again for intersection check
+      let north = -90
+      let south = 90
+      let east = -180
+      let west = 180
+
+      for (const p of points) {
+        if (p.lat > north) north = p.lat
+        if (p.lat < south) south = p.lat
+        if (p.lng > east) east = p.lng
+        if (p.lng < west) west = p.lng
+      }
+
+      return { points, bbox: { north, south, east, west } as BoundingBox }
+    })
+    .filter((d): d is { points: RoutePoint[]; bbox: BoundingBox } => !!d)
+
+  const intersecting: PrioritizedSegment[] = []
+  const others: PrioritizedSegment[] = []
+
+  for (const segment of segments) {
+    const segmentBbox = computeSegmentBoundingBox(segment)
+    let isIntersecting = false
+
+    // Check if segment intersects ANY route
+    for (const rData of routeData) {
+      // Fast check: BBox overlap
+      if (doBoundingBoxesIntersect(segmentBbox, rData.bbox)) {
+        // Refined check: geometry intersection
+        if (doesSegmentIntersectRoute(segment, rData.points, thresholdMeters)) {
+          isIntersecting = true
+          break
+        }
+      }
+    }
+
+    if (isIntersecting) {
+      intersecting.push(segment)
+    } else {
+      others.push(segment)
+    }
+  }
+
+  return { intersecting, others }
 }

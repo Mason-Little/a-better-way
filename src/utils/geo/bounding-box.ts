@@ -3,7 +3,7 @@
  * Shared geographic bounding box calculations
  */
 
-import type { BoundingBox, Route, RoutePoint } from '@/entities'
+import type { BoundingBox, PrioritizedSegment, Route, RoutePoint } from '@/entities'
 
 import { decodePolyline } from './polyline'
 
@@ -104,4 +104,34 @@ export function isRouteWithinBoundingBox(route: Route, bbox: BoundingBox): boole
     routeBbox.east <= bbox.east &&
     routeBbox.west >= bbox.west
   )
+}
+
+/**
+ * Check if two bounding boxes intersect
+ */
+export function doBoundingBoxesIntersect(a: BoundingBox, b: BoundingBox): boolean {
+  return a.north >= b.south && a.south <= b.north && a.east >= b.west && a.west <= b.east
+}
+
+/**
+ * Compute bounding box from a traffic segment
+ */
+export function computeSegmentBoundingBox(segment: PrioritizedSegment): BoundingBox {
+  if (!segment.shape || segment.shape.length === 0) {
+    return { north: 0, south: 0, east: 0, west: 0 }
+  }
+
+  let north = -90
+  let south = 90
+  let east = -180
+  let west = 180
+
+  for (const point of segment.shape) {
+    if (point.lat > north) north = point.lat
+    if (point.lat < south) south = point.lat
+    if (point.lng > east) east = point.lng
+    if (point.lng < west) west = point.lng
+  }
+
+  return { north, south, east, west }
 }
