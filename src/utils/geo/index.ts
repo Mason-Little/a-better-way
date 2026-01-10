@@ -8,6 +8,7 @@ export {
   computeRouteBoundingBox,
   mergeBoundingBoxes,
   isRouteWithinBoundingBox,
+  isPointInBoundingBox,
 } from './bounding-box'
 
 export { decodePolyline } from './polyline'

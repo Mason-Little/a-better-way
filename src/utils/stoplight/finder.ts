@@ -1,6 +1,12 @@
 import type { Route, RouteAction, RoutePoint, StopSignResult } from '@/entities'
 import { useAvoidanceStore } from '@/stores/avoidanceStore'
-import { calculateBearing, createBoundingBox, decodePolyline, getPointBehind } from '@/utils/geo'
+import {
+  calculateBearing,
+  createBoundingBox,
+  decodePolyline,
+  getPointBehind,
+  isPointInBoundingBox,
+} from '@/utils/geo'
 
 function isSharpLeftTurn(action: RouteAction): boolean {
   return (
@@ -20,14 +26,23 @@ async function findStopSignsForRoute(route: Route): Promise<StopSignResult[]> {
   const polylinePoints = decodePolyline(route.sections[0]?.polyline ?? '')
   const turnByTurnActions = route.sections[0]?.turnByTurnActions
   const stopSignResults: StopSignResult[] = []
+  const { stopSignBoxes } = useAvoidanceStore()
 
   if (!turnByTurnActions) return []
 
   const checkPromises = turnByTurnActions.map(async (action, index) => {
     if (isSharpLeftTurn(action)) {
       const turnPoint = polylinePoints[action.offset]
+
+      // valid point check
+      if (!turnPoint) return null
+
+      // Check if we already have a stop sign at this location (avoid redundant API calls)
+      const isKnown = stopSignBoxes.value.some((box) => isPointInBoundingBox(turnPoint, box))
+      if (isKnown) return null
+
       const lastPoint = polylinePoints[action.offset - 1]
-      if (!turnPoint || !lastPoint) return null
+      if (!lastPoint) return null
 
       const heading = calculateBearing(turnPoint, lastPoint)
       const offsetPoint = getPointBehind(turnPoint, heading, 40)

@@ -135,3 +135,15 @@ export function computeSegmentBoundingBox(segment: PrioritizedSegment): Bounding
 
   return { north, south, east, west }
 }
+
+/**
+ * Check if a point is within a bounding box
+ */
+export function isPointInBoundingBox(point: RoutePoint, bbox: BoundingBox): boolean {
+  return (
+    point.lat <= bbox.north &&
+    point.lat >= bbox.south &&
+    point.lng <= bbox.east &&
+    point.lng >= bbox.west
+  )
+}
