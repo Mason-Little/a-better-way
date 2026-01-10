@@ -1,4 +1,5 @@
 import type { BoundingBox, Route, RoutePoint } from '@/entities'
+import { useAvoidanceStore } from '@/stores/avoidanceStore'
 import { useRoutesStore } from '@/stores/routesStore'
 import { calculateRoute } from '@/lib/here-sdk'
 import { formatBoundingBox } from '@/utils/geo'
@@ -68,19 +69,18 @@ export async function getBetterWayRoutes(
   etaMargin: number,
   jamThreshold: number,
 ) {
+  const { setRoutes } = useRoutesStore()
   const {
-    setRoutes,
-    clearAvoidZones,
-    clearTrafficCache,
-    addAvoidSegments,
-    addAvoidStopSignBoxes,
+    clearAll,
+    addTrafficSegments,
+    addStopSignBoxes,
     getCleanedSegments,
-    avoidStopSignBoxes,
-  } = useRoutesStore()
+    stopSignBoxes,
+    takeSnapshot,
+  } = useAvoidanceStore()
 
   // Clear any previous avoid zones and traffic cache
-  clearAvoidZones()
-  clearTrafficCache()
+  clearAll()
 
   const initialRoutes = await findInitialRoutes(start, end)
 
@@ -128,13 +128,16 @@ export async function getBetterWayRoutes(
     const newStopSignBoxes = stopSignResults.map((r) => r.avoidZone)
 
     // Add to store (deduplication handled by store)
-    addAvoidSegments(trafficSegments)
-    addAvoidStopSignBoxes(newStopSignBoxes)
+    addTrafficSegments(trafficSegments)
+    addStopSignBoxes(newStopSignBoxes)
+
+    // Capture snapshot before route calculation
+    takeSnapshot(iteration, currentRoutes)
 
     // Calculate new routes avoiding accumulated zones
     const improvedRoutes = await calculateBetterRoute(start, end, {
-      segments: getCleanedSegments(),
-      stopSignBoxes: avoidStopSignBoxes.value,
+      segments: getCleanedSegments(250, currentRoutes),
+      stopSignBoxes: stopSignBoxes.value,
     })
 
     if (!improvedRoutes.length) {
@@ -181,6 +184,6 @@ export async function getBetterWayRoutes(
   const finalEta = bestRoute.sections[0]?.summary.duration ?? 0
   const finalDelay = getRouteDelay(bestRoute)
   console.log(
-    `[BetterWay] Complete: ${iteration} iterations | Traffic segments: ${getCleanedSegments().length} | Stop signs: ${avoidStopSignBoxes.value.length} | Final ETA: ${Math.round(finalEta / 60)}min (delay: ${Math.round(finalDelay / 60)}min)`,
+    `[BetterWay] Complete: ${iteration} iterations | Traffic segments: ${getCleanedSegments(250, currentRoutes).length} | Stop signs: ${stopSignBoxes.value.length} | Final ETA: ${Math.round(finalEta / 60)}min (delay: ${Math.round(finalDelay / 60)}min)`,
   )
 }

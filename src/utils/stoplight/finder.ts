@@ -1,7 +1,6 @@
 import type { Route, RouteAction, RoutePoint, StopSignResult } from '@/entities'
+import { useAvoidanceStore } from '@/stores/avoidanceStore'
 import { calculateBearing, createBoundingBox, decodePolyline, getPointBehind } from '@/utils/geo'
-
-import { detectStopSign } from './stop-sign-recognition'
 
 function isSharpLeftTurn(action: RouteAction): boolean {
   return (
@@ -13,7 +12,8 @@ function isSharpLeftTurn(action: RouteAction): boolean {
 }
 
 async function checkForStopSignAtPoint(point: RoutePoint, heading: number): Promise<boolean> {
-  return await detectStopSign(point, heading)
+  const { detectStopSignCached } = useAvoidanceStore()
+  return await detectStopSignCached(point, heading)
 }
 
 async function findStopSignsForRoute(route: Route): Promise<StopSignResult[]> {

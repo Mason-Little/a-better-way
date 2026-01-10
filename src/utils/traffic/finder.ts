@@ -1,6 +1,6 @@
 import type { FlowResponse, Route } from '@/entities'
 import type { PrioritizedSegment } from '@/entities/traffic'
-import { useRoutesStore } from '@/stores/routesStore'
+import { useAvoidanceStore } from '@/stores/avoidanceStore'
 import { fetchTrafficFlowByBbox } from '@/lib/here-sdk/traffic'
 import { computeRouteBoundingBox, isRouteWithinBoundingBox, mergeBoundingBoxes } from '@/utils/geo'
 
@@ -19,7 +19,7 @@ export async function findTrafficAvoidance(
     setTrafficCoverageBbox,
     getCachedTrafficFlow,
     setCachedTrafficFlow,
-  } = useRoutesStore()
+  } = useAvoidanceStore()
 
   if (routes.length === 0) {
     return []

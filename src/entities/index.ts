@@ -17,6 +17,9 @@ export { type RoutingOptions, type RoutingResult } from './routing'
 // Traffic analysis
 export * from './traffic'
 
+// Avoidance
+export { type AvoidSnapshot } from './avoidance'
+
 // Route analysis
 
 // Search
