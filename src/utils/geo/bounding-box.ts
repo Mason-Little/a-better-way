@@ -81,7 +81,15 @@ export function mergeBoundingBoxes(boxes: BoundingBox[]): BoundingBox {
     if (box.west < west) west = box.west
   }
 
-  return { north, south, east, west }
+  // Add ~500m margin (0.005 degrees is roughly 500m)
+  const MARGIN = 0.005
+
+  return {
+    north: north + MARGIN,
+    south: south - MARGIN,
+    east: east + MARGIN,
+    west: west - MARGIN,
+  }
 }
 
 /**
