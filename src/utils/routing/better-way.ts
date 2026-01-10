@@ -44,6 +44,7 @@ async function calculateBetterRoute(
         segments: avoid.segments,
         areas: formattedStopSignAreas,
       },
+      return: ['turnByTurnActions', 'summary', 'polyline'],
       alternatives: 5,
       transportMode: 'car',
     })
