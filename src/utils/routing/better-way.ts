@@ -172,15 +172,7 @@ export async function getBetterWayRoutes(
       console.log(`[BetterWay] Early stop: All routes duplicates (iteration ${iteration})`)
       break
     }
-
-    // If we got a route with no delay, we're optimal
-    const currentDelay = getRouteDelay(bestRoute)
-    if (currentDelay <= 0) {
-      console.log(`[BetterWay] Early stop: Zero delay achieved (iteration ${iteration})`)
-      break
-    }
   }
-
   const finalEta = bestRoute.sections[0]?.summary.duration ?? 0
   const finalDelay = getRouteDelay(bestRoute)
   console.log(
