@@ -8,6 +8,7 @@ import { env } from '@/lib/environment'
 interface DebugFeatures {
   showTrafficBoundingBox: boolean
   showTrafficSegments: boolean
+  showStopSigns: boolean
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ interface DebugFeatures {
 const features = reactive<DebugFeatures>({
   showTrafficBoundingBox: true,
   showTrafficSegments: true,
+  showStopSigns: true,
 })
 
 // ─────────────────────────────────────────────────────────────────────────────

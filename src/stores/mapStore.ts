@@ -28,6 +28,9 @@ const debugBoundingBox = shallowRef<H.map.Rect | null>(null)
 /** Traffic segments group */
 const trafficSegmentsGroup = shallowRef<H.map.Group | null>(null)
 
+/** Stop signs group */
+const stopSignsGroup = shallowRef<H.map.Group | null>(null)
+
 /** Loading state for route calculation */
 const isLoadingRoutes = ref(false)
 
@@ -239,6 +242,65 @@ function clearTrafficSegments(): void {
   trafficSegmentsGroup.value = null
 }
 
+/**
+ * Draw stop signs on the map
+ */
+function drawStopSigns(boxes: BoundingBox[]): void {
+  const { isDev, features } = useDebugStore()
+
+  if (!isDev.value || !features.showStopSigns) {
+    clearStopSigns()
+    return
+  }
+
+  if (!map.value) return
+
+  clearStopSigns()
+
+  const group = new H.map.Group()
+
+  boxes.forEach((box) => {
+    // Calculate center of the bounding box for the marker
+    const centerLat = (box.north + box.south) / 2
+    const centerLng = (box.east + box.west) / 2
+
+    // Create a DOM marker with a "STOP" sign style
+    const domIcon = new H.map.DomIcon(
+      `<div style="
+        background-color: #cc0000;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        font-weight: bold;
+        font-size: 10px;
+        font-family: sans-serif;
+      ">STOP</div>`,
+    )
+
+    const marker = new H.map.DomMarker({ lat: centerLat, lng: centerLng }, { icon: domIcon })
+    group.addObject(marker)
+  })
+
+  map.value.addObject(group)
+  stopSignsGroup.value = group
+}
+
+/**
+ * Clear stop signs
+ */
+function clearStopSigns(): void {
+  if (stopSignsGroup.value && map.value) {
+    map.value.removeObject(stopSignsGroup.value)
+  }
+  stopSignsGroup.value = null
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Camera Control
 // ─────────────────────────────────────────────────────────────────────────────
@@ -331,6 +393,8 @@ export function useMapStore() {
     clearDebugBoundingBox,
     drawTrafficSegments,
     clearTrafficSegments,
+    drawStopSigns,
+    clearStopSigns,
 
     // Camera control
     setMapView,

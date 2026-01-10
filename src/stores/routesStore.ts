@@ -8,6 +8,7 @@ import { ref } from 'vue'
 import type { BoundingBox, FlowResponse, PrioritizedSegment, Route } from '@/entities'
 import { useMapStore } from '@/stores/mapStore'
 import { findIntersectingSegments } from '@/utils/geo/intersection'
+import { findStopSigns } from '@/utils/stoplight/finder'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared State
@@ -52,6 +53,15 @@ function setRoutes(newRoutes: Route[]): boolean {
   routes.value.push(...uniqueNewRoutes)
   const { drawRoutes } = useMapStore()
   drawRoutes({ routes: routes.value })
+
+  // Scan for stop signs in background
+  findStopSigns(uniqueNewRoutes).then((results) => {
+    if (results.length > 0) {
+      console.log(`[RoutesStore] Found ${results.length} stop signs`)
+      addAvoidStopSignBoxes(results.map((r) => r.avoidZone))
+    }
+  })
+
   return true
 }
 
@@ -59,12 +69,14 @@ function setRoutes(newRoutes: Route[]): boolean {
  * Clear all routes
  */
 function clearRoutes() {
-  const { clearRoutesFromMap, clearDebugBoundingBox, clearTrafficSegments } = useMapStore()
+  const { clearRoutesFromMap, clearDebugBoundingBox, clearTrafficSegments, clearStopSigns } =
+    useMapStore()
   routes.value = []
   selectedRouteIndex.value = 0
   clearRoutesFromMap()
   clearDebugBoundingBox()
   clearTrafficSegments()
+  clearStopSigns()
   clearAvoidZones()
 }
 
@@ -98,6 +110,8 @@ function addAvoidSegments(segments: PrioritizedSegment[]) {
  */
 function addAvoidStopSignBoxes(boxes: BoundingBox[]) {
   avoidStopSignBoxes.value.push(...boxes)
+  const { drawStopSigns } = useMapStore()
+  drawStopSigns(avoidStopSignBoxes.value)
 }
 
 /**
@@ -143,8 +157,11 @@ function getCleanedSegments(maxSegments = 250): string[] {
 function clearAvoidZones() {
   avoidSegments.value = []
   avoidStopSignBoxes.value = []
-  const { clearTrafficSegments } = useMapStore()
+  avoidSegments.value = []
+  avoidStopSignBoxes.value = []
+  const { clearTrafficSegments, clearStopSigns } = useMapStore()
   clearTrafficSegments()
+  clearStopSigns()
 }
 
 /**
