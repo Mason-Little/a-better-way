@@ -105,7 +105,7 @@ export async function getBetterWayRoutes(
   )
 
   // Show the initial routes first
-  setRoutes([...initialRoutes])
+  setRoutes(initialRoutes.map((r) => ({ ...r, iteration: 0 })))
 
   let currentRoutes = initialRoutes
   let bestRoute = bestInitialRoute
@@ -162,7 +162,8 @@ export async function getBetterWayRoutes(
     bestRoute = newBest
     currentRoutes = improvedRoutes
 
-    const hasNewRoutes = setRoutes(improvedRoutes)
+    const taggedImprovedRoutes = improvedRoutes.map((r) => ({ ...r, iteration }))
+    const hasNewRoutes = setRoutes(taggedImprovedRoutes)
     if (!hasNewRoutes) {
       console.log(`[BetterWay] Early stop: All routes duplicates (iteration ${iteration})`)
       break

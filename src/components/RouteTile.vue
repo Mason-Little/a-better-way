@@ -104,7 +104,7 @@ const handleEndSearch = async (query: string) => {
 
 <template>
   <div
-    class="route-tile-card relative z-10 w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl shadow-blue-900/10 ring-1 ring-black/5 backdrop-blur-xl"
+    class="route-tile-card relative z-10 w-full max-w-md rounded-3xl border border-white/50 bg-white/80 p-6 shadow-2xl shadow-blue-900/20 backdrop-blur-2xl transition-all duration-500"
   >
     <div class="mb-4 flex items-center justify-between">
       <h2 class="text-lg font-bold text-gray-800">Plan your trip</h2>
@@ -163,12 +163,19 @@ const handleEndSearch = async (query: string) => {
       />
 
       <!-- Traffic Avoidance Settings -->
-      <div class="mt-2 rounded-xl bg-gray-50/80 p-4 ring-1 ring-gray-200/60">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-xs font-semibold tracking-wide text-gray-600 uppercase">
+      <div
+        class="mt-2 rounded-2xl border border-white/40 bg-white/40 p-5 backdrop-blur-lg transition-all hover:bg-white/50"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-[10px] font-bold tracking-widest text-gray-500 uppercase">
             Traffic Tolerance
           </h3>
-          <span class="text-xs font-semibold text-blue-600"> {{ jamThreshold }}/10 </span>
+          <div
+            class="flex items-center gap-1.5 rounded-full bg-white/50 px-2 py-0.5 ring-1 ring-black/5"
+          >
+            <span class="text-xs font-bold text-blue-600">{{ jamThreshold }}</span>
+            <span class="text-[10px] font-medium text-gray-400">/ 10</span>
+          </div>
         </div>
         <input
           v-model.number="jamThreshold"
@@ -176,7 +183,7 @@ const handleEndSearch = async (query: string) => {
           min="1"
           max="10"
           step="1"
-          class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          class="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200/50 accent-blue-600 hover:accent-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
         />
         <p class="mt-2 text-xs text-gray-500 italic">
           {{ jamThresholdDescription }}

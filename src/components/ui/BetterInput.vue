@@ -41,7 +41,7 @@ const handleInput = (event: Event) => {
       :value="model"
       @input="handleInput"
       :placeholder="placeholder"
-      class="w-full px-4 py-3 text-gray-800 bg-white/80 backdrop-blur-sm border border-gray-300/60 rounded-xl shadow-sm outline-none transition-all duration-200 placeholder:text-gray-400 hover:border-gray-400 hover:bg-white/95 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/15"
+      class="w-full rounded-xl border border-gray-200/50 bg-white/50 px-4 py-3 text-gray-900 shadow-sm backdrop-blur-md transition-all duration-300 placeholder:text-gray-400 hover:bg-white/80 hover:shadow-md focus:border-blue-500/50 focus:bg-white/90 focus:ring-4 focus:ring-blue-500/10 active:scale-[0.99]"
     />
   </div>
 </template>

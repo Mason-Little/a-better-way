@@ -1,3 +1,72 @@
+<template>
+  <button
+    @click="emit('select')"
+    class="group relative flex min-w-[180px] flex-col justify-between overflow-hidden rounded-2xl border p-4 text-left transition-all duration-300 sm:min-w-[200px]"
+    :class="[
+      selected
+        ? 'border-blue-500/50 bg-blue-50/80 shadow-[0_8px_24px_-4px_rgba(59,130,246,0.25)] ring-1 ring-blue-500/20 backdrop-blur-xl'
+        : 'border-white/40 bg-white/40 shadow-sm hover:border-white/60 hover:bg-white/60 hover:shadow-lg hover:shadow-black/5 backdrop-blur-lg',
+    ]"
+  >
+    <!-- Background Gradient for Selected -->
+    <div
+      v-if="selected"
+      class="absolute inset-0 -z-10 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-100 transition-opacity duration-500"
+    />
+
+    <!-- Header -->
+    <div class="mb-3 flex w-full items-start justify-between">
+      <div class="flex flex-col gap-1">
+        <span
+          class="text-[10px] font-bold tracking-wider uppercase"
+          :class="selected ? 'text-blue-600' : 'text-gray-500 group-hover:text-gray-700'"
+        >
+          Route {{ index + 1 }}
+        </span>
+
+        <!-- Iteration Indicator -->
+        <div v-if="isOptimized" class="flex items-center gap-1.5">
+          <div class="relative h-1.5 w-1.5">
+            <span
+              class="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"
+            ></span>
+            <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
+          </div>
+          <span
+            class="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-[10px] font-bold text-transparent"
+          >
+            Iter {{ route.iteration }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Traffic Badge -->
+      <div
+        v-if="hasTrafficDelay"
+        class="flex items-center gap-1 rounded-full bg-orange-500/10 px-2 py-0.5"
+      >
+        <span class="block h-1 w-1 rounded-full bg-orange-500" />
+        <span class="text-[10px] font-bold text-orange-600">+{{ trafficDelayMinutes }}m</span>
+      </div>
+    </div>
+
+    <!-- Main Stats -->
+    <div class="space-y-0.5">
+      <div
+        class="text-2xl font-black tracking-tight transition-colors"
+        :class="selected ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900'"
+      >
+        {{ formattedDuration }}
+      </div>
+      <div class="flex items-center gap-2 text-xs font-medium text-gray-500">
+        <span>{{ formattedDistance }}</span>
+        <span class="h-1 w-1 rounded-full bg-gray-300"></span>
+        <span>Fastest</span>
+      </div>
+    </div>
+  </button>
+</template>
+
 <script setup lang="ts">
 import { computed } from 'vue'
 
@@ -20,6 +89,9 @@ const emit = defineEmits<{
 // Get summary from first section
 const summary = computed(() => route.sections[0]?.summary)
 
+// Check if this is an "optimized" route (iteration > 0)
+const isOptimized = computed(() => (route.iteration ?? 0) > 0)
+
 // Format duration as "X min" or "X hr Y min"
 const formattedDuration = computed(() => {
   const seconds = summary.value?.duration ?? 0
@@ -28,12 +100,12 @@ const formattedDuration = computed(() => {
   if (minutes >= 60) {
     const hours = Math.floor(minutes / 60)
     const remainingMinutes = minutes % 60
-    return remainingMinutes > 0 ? `${hours} hr ${remainingMinutes} min` : `${hours} hr`
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
   }
   return `${minutes} min`
 })
 
-// Format distance as "X.X km" or "X.X mi"
+// Format distance
 const formattedDistance = computed(() => {
   const meters = summary.value?.length ?? 0
   const km = meters / 1000
@@ -53,42 +125,3 @@ const trafficDelayMinutes = computed(() => {
   return Math.round((duration - baseDuration) / 60)
 })
 </script>
-
-<template>
-  <button
-    @click="emit('select')"
-    class="route-card flex-shrink-0 snap-center rounded-xl border-2 p-4 transition-all duration-200"
-    :class="
-      selected
-        ? 'border-blue-500 bg-blue-50 shadow-lg shadow-blue-500/20'
-        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
-    "
-    style="min-width: 160px"
-  >
-    <!-- Route Number Badge -->
-    <div class="mb-2 flex items-center justify-between">
-      <span
-        class="rounded-full px-2.5 py-0.5 text-xs font-bold"
-        :class="selected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'"
-      >
-        Route {{ index + 1 }}
-      </span>
-      <span
-        v-if="hasTrafficDelay && trafficDelayMinutes > 0"
-        class="text-xs font-medium text-orange-500"
-      >
-        +{{ trafficDelayMinutes }} min
-      </span>
-    </div>
-
-    <!-- Duration -->
-    <div class="mb-1 text-xl font-bold" :class="selected ? 'text-blue-700' : 'text-gray-800'">
-      {{ formattedDuration }}
-    </div>
-
-    <!-- Distance -->
-    <div class="text-sm" :class="selected ? 'text-blue-600' : 'text-gray-500'">
-      {{ formattedDistance }}
-    </div>
-  </button>
-</template>

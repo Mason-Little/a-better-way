@@ -54,15 +54,14 @@ const handleClick = (suggestion: SearchResult) => {
 <style scoped>
 .dropdown-container {
   width: 100%;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(209, 213, 219, 0.6);
-  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 1rem;
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.08),
-    0 10px 20px -5px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    0 10px 40px -10px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   overflow: hidden;
   margin-top: 0.5rem;
 }

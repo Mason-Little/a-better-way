@@ -86,6 +86,7 @@ export const RouteSchema = z
   .object({
     id: z.string().describe('Unique route ID'),
     sections: z.array(RouteSectionSchema).describe('Route sections'),
+    iteration: z.number().optional().describe('Algorithm iteration number'),
   })
   .describe('Complete route')
 
