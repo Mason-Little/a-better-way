@@ -58,11 +58,12 @@ function setRoutes(newRoutes: Route[]): boolean {
  * Clear all routes
  */
 function clearRoutes() {
-  const { clearRoutesFromMap, clearDebugBoundingBox } = useMapStore()
+  const { clearRoutesFromMap, clearDebugBoundingBox, clearTrafficSegments } = useMapStore()
   routes.value = []
   selectedRouteIndex.value = 0
   clearRoutesFromMap()
   clearDebugBoundingBox()
+  clearTrafficSegments()
   clearAvoidZones()
 }
 
@@ -85,8 +86,10 @@ function selectRoute(index: number) {
  */
 function addAvoidSegments(segments: PrioritizedSegment[]) {
   const existingIds = new Set(avoidSegments.value.map((s) => s.id))
-  const newSegments = segments.filter((s) => !existingIds.has(s.id))
-  avoidSegments.value.push(...newSegments)
+  avoidSegments.value.push(...segments.filter((s) => !existingIds.has(s.id)))
+
+  const { drawTrafficSegments } = useMapStore()
+  drawTrafficSegments(avoidSegments.value)
 }
 
 /**
@@ -113,6 +116,8 @@ function getCleanedSegments(maxSegments = 250): string[] {
 function clearAvoidZones() {
   avoidSegments.value = []
   avoidStopSignBoxes.value = []
+  const { clearTrafficSegments } = useMapStore()
+  clearTrafficSegments()
 }
 
 /**

@@ -25,6 +25,9 @@ const routeRenderer = shallowRef<RouteRenderer | null>(null)
 /** Debug bounding box instance */
 const debugBoundingBox = shallowRef<H.map.Rect | null>(null)
 
+/** Traffic segments group */
+const trafficSegmentsGroup = shallowRef<H.map.Group | null>(null)
+
 /** Loading state for route calculation */
 const isLoadingRoutes = ref(false)
 
@@ -60,6 +63,7 @@ export function unregisterMap(): void {
     routeRenderer.value.clearRoutes()
     routeRenderer.value = null
   }
+  clearTrafficSegments()
   map.value = null
   defaultLayers.value = null
   trafficEnabled.value = false
@@ -184,6 +188,57 @@ function clearDebugBoundingBox(): void {
   debugBoundingBox.value = null
 }
 
+/**
+ * Draw traffic segments for debugging/visualization
+ */
+function drawTrafficSegments(segments: { shape?: { lat: number; lng: number }[] }[]): void {
+  const { isDev, features } = useDebugStore()
+
+  if (!isDev.value || !features.showTrafficSegments) {
+    clearTrafficSegments()
+    return
+  }
+
+  if (!map.value) {
+    return
+  }
+
+  clearTrafficSegments()
+
+  const group = new H.map.Group()
+
+  segments.forEach((seg) => {
+    if (!seg.shape || seg.shape.length < 2) return
+
+    const lineString = new H.geo.LineString()
+    seg.shape.forEach((pt) => lineString.pushPoint(pt))
+
+    const polyline = new H.map.Polyline(lineString, {
+      style: {
+        lineWidth: 4,
+        strokeColor: 'rgba(255, 0, 0, 0.7)', // Red
+        lineDash: [2, 2],
+      },
+    })
+
+    group.addObject(polyline)
+  })
+
+  // Add group to map
+  map.value.addObject(group)
+  trafficSegmentsGroup.value = group
+}
+
+/**
+ * Clear traffic segments
+ */
+function clearTrafficSegments(): void {
+  if (trafficSegmentsGroup.value && map.value) {
+    map.value.removeObject(trafficSegmentsGroup.value)
+  }
+  trafficSegmentsGroup.value = null
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Camera Control
 // ─────────────────────────────────────────────────────────────────────────────
@@ -274,6 +329,8 @@ export function useMapStore() {
     clearRoutesFromMap,
     drawDebugBoundingBox,
     clearDebugBoundingBox,
+    drawTrafficSegments,
+    clearTrafficSegments,
 
     // Camera control
     setMapView,
