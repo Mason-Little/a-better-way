@@ -58,10 +58,11 @@ function setRoutes(newRoutes: Route[]): boolean {
  * Clear all routes
  */
 function clearRoutes() {
-  const { clearRoutesFromMap } = useMapStore()
+  const { clearRoutesFromMap, clearDebugBoundingBox } = useMapStore()
   routes.value = []
   selectedRouteIndex.value = 0
   clearRoutesFromMap()
+  clearDebugBoundingBox()
   clearAvoidZones()
 }
 
@@ -126,6 +127,8 @@ function getTrafficCoverageBbox(): BoundingBox | null {
  */
 function setTrafficCoverageBbox(bbox: BoundingBox): void {
   trafficCoverageBbox.value = bbox
+  const { drawDebugBoundingBox } = useMapStore()
+  drawDebugBoundingBox(bbox)
 }
 
 /**
@@ -148,6 +151,8 @@ function setCachedTrafficFlow(flow: FlowResponse | null): void {
 function clearTrafficCache(): void {
   trafficCoverageBbox.value = null
   cachedTrafficFlow.value = null
+  const { clearDebugBoundingBox } = useMapStore()
+  clearDebugBoundingBox()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

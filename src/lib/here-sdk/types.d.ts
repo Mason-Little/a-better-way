@@ -350,6 +350,46 @@ declare global {
       }
 
       /**
+       * Options for creating a Polygon
+       */
+      interface PolygonOptions {
+        /** Style for the polygon */
+        style?: SpatialStyle
+        /** Custom data to attach */
+        data?: unknown
+        /** Whether the polygon is visible */
+        visibility?: boolean
+        /** Z-index for layer ordering */
+        zIndex?: number
+        /** Minimum zoom level for visibility */
+        min?: number
+        /** Maximum zoom level for visibility */
+        max?: number
+      }
+
+      /**
+       * A polygon rendered on the map
+       */
+      class Polygon extends Object {
+        constructor(geometry: geo.LineString, options?: PolygonOptions)
+        getGeometry(): geo.LineString
+        setGeometry(geometry: geo.LineString): void
+        setStyle(style: SpatialStyle): void
+        getStyle(): SpatialStyle
+      }
+
+      /**
+       * A rectangle rendered on the map
+       */
+      class Rect extends Object {
+        constructor(geometry: geo.Rect, options?: PolygonOptions)
+        getGeometry(): geo.Rect
+        setGeometry(geometry: geo.Rect): void
+        setStyle(style: SpatialStyle): void
+        getStyle(): SpatialStyle
+      }
+
+      /**
        * A group of map objects for organization and batch operations
        */
       class Group extends Object {

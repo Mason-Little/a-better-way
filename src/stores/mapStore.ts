@@ -5,7 +5,8 @@
 
 import { ref, shallowRef } from 'vue'
 
-import type { MapViewOptions, RoutingResult } from '@/entities'
+import type { BoundingBox, MapViewOptions, RoutingResult } from '@/entities'
+import { useDebugStore } from '@/stores/debugStore'
 import { RouteRenderer } from '@/lib/here-sdk/routeRenderer'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,6 +21,9 @@ const defaultLayers = shallowRef<H.service.Platform.DefaultLayers | null>(null)
 
 /** The route renderer instance */
 const routeRenderer = shallowRef<RouteRenderer | null>(null)
+
+/** Debug bounding box instance */
+const debugBoundingBox = shallowRef<H.map.Rect | null>(null)
 
 /** Loading state for route calculation */
 const isLoadingRoutes = ref(false)
@@ -59,6 +63,7 @@ export function unregisterMap(): void {
   map.value = null
   defaultLayers.value = null
   trafficEnabled.value = false
+  clearDebugBoundingBox()
 }
 
 /**
@@ -131,6 +136,52 @@ function clearRoutesFromMap(): void {
   if (routeRenderer.value) {
     routeRenderer.value.clearRoutes()
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Debug Rendering
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Draw a debug bounding box on the map
+ */
+function drawDebugBoundingBox(bbox: BoundingBox): void {
+  const { isDev, features } = useDebugStore()
+
+  // Only draw in dev mode and if feature is enabled
+  if (!isDev.value || !features.showTrafficBoundingBox) {
+    clearDebugBoundingBox()
+    return
+  }
+
+  if (!map.value) {
+    console.warn('[MapStore] No map available to draw debug bbox')
+    return
+  }
+
+  // clear existing box first
+  clearDebugBoundingBox()
+
+  const rect = new H.map.Rect(new H.geo.Rect(bbox.north, bbox.west, bbox.south, bbox.east), {
+    style: {
+      strokeColor: 'rgba(255, 0, 0, 0.7)', // Red stroke
+      lineWidth: 2,
+      fillColor: 'rgba(255, 0, 0, 0.1)', // Light red fill
+    },
+  })
+
+  map.value.addObject(rect)
+  debugBoundingBox.value = rect
+}
+
+/**
+ * Clear the debug bounding box from the map
+ */
+function clearDebugBoundingBox(): void {
+  if (debugBoundingBox.value && map.value) {
+    map.value.removeObject(debugBoundingBox.value)
+  }
+  debugBoundingBox.value = null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -221,6 +272,8 @@ export function useMapStore() {
     drawRoutes,
     setSelectedRouteOnMap,
     clearRoutesFromMap,
+    drawDebugBoundingBox,
+    clearDebugBoundingBox,
 
     // Camera control
     setMapView,
