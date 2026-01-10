@@ -37,6 +37,7 @@ function toPrioritizedSegment(
   total: number,
   confidence: number,
   refReplacements?: Record<string, string>,
+  points?: { lat: number; lng: number }[],
 ): PrioritizedSegment | null {
   const expandedRef = expandSegmentRef(seg.ref, refReplacements)
   const segmentId = extractSegmentId(expandedRef)
@@ -46,8 +47,47 @@ function toPrioritizedSegment(
         id: segmentId,
         priority: calculatePriority(index, total),
         dataSource: getDataSource(confidence),
+        shape: points,
       }
     : null
+}
+
+/**
+ * Map shape links to segments based on cumulative length.
+ * Accesses shape links from the FlowItem's location property.
+ */
+function mapShapeToSegments(item: FlowItem): Map<number, { lat: number; lng: number }[]> {
+  const segmentRefs = item.location.segmentRef?.segments
+  const shapeLinks = item.location.shape?.links
+  const map = new Map<number, { lat: number; lng: number }[]>()
+
+  if (!segmentRefs || !shapeLinks) return map
+
+  let linkIdx = 0
+  let linkCumulative = 0
+
+  // Iterate through each segment to find matching shape links
+  for (let i = 0; i < segmentRefs.length; i++) {
+    const seg = segmentRefs[i]!
+    const segStart = linkCumulative // Approximation: aligned start
+    const segEnd = segStart + seg.length
+    const points: { lat: number; lng: number }[] = []
+
+    // Collect links that overlap with this segment
+    while (linkIdx < shapeLinks.length) {
+      const link = shapeLinks[linkIdx]!
+
+      points.push(...link.points)
+
+      const len = link.length
+      linkCumulative += len
+      linkIdx++
+
+      if (linkCumulative >= segEnd) break
+    }
+    map.set(i, points)
+  }
+  return map
 }
 
 /**
@@ -69,6 +109,9 @@ function extractPrioritizedSegments(
   // Return all segments with middle-out priority.
   const allJammed = !hasSubSegments || subSegments.every((sub) => isJammed(sub, jamThreshold))
 
+  // Pre-calculate shape mapping
+  const shapeMap = mapShapeToSegments(item)
+
   if (allJammed) {
     return segmentRefs
       .map((seg, i) =>
@@ -78,6 +121,7 @@ function extractPrioritizedSegments(
           segmentRefs.length,
           item.currentFlow.confidence,
           refReplacements,
+          shapeMap.get(i),
         ),
       )
       .filter((s): s is PrioritizedSegment => s !== null)
@@ -109,6 +153,7 @@ function extractPrioritizedSegments(
           groupSize,
           subSegment.confidence,
           refReplacements,
+          shapeMap.get(segIdx), // Use the original index from segmentRefs
         )
         if (prioritized) results.push(prioritized)
       }

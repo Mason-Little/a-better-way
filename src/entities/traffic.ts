@@ -37,6 +37,7 @@ const FlowItemSchema = z
           links: z.array(
             z.object({
               points: z.array(z.object({ lat: z.number(), lng: z.number() })),
+              length: z.number(),
             }),
           ),
         })
@@ -72,6 +73,7 @@ const PrioritizedSegmentSchema = z.object({
   id: z.string(),
   priority: z.number(),
   dataSource: z.enum(['realtime', 'historical', 'speedLimit']).optional(),
+  shape: z.array(z.object({ lat: z.number(), lng: z.number() })).optional(),
 })
 
 export type TrafficFlowData = z.infer<typeof TrafficFlowDataSchema>
