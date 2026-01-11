@@ -82,11 +82,24 @@ const RouteSectionSchema = z
   })
   .describe('Route section')
 
+const RouteEvaluationSchema = z
+  .object({
+    intersectingTrafficSegments: z
+      .number()
+      .describe('Number of traffic segments this route passes through'),
+    intersectingStopSignBoxes: z
+      .number()
+      .describe('Number of stop sign zones this route passes through'),
+    totalAvoidanceScore: z.number().describe('Combined avoidance score for UI display'),
+  })
+  .describe('Evaluation result for a route indicating avoidance zone intersections')
+
 export const RouteSchema = z
   .object({
     id: z.string().describe('Unique route ID'),
     sections: z.array(RouteSectionSchema).describe('Route sections'),
     iteration: z.number().optional().describe('Algorithm iteration number'),
+    evaluation: RouteEvaluationSchema.optional().describe('Route evaluation results'),
   })
   .describe('Complete route')
 
@@ -100,3 +113,4 @@ export const RouteSpanTypeSchema = z
 
 export type RouteAction = z.infer<typeof RouteActionSchema>
 export type Route = z.infer<typeof RouteSchema>
+export type RouteEvaluation = z.infer<typeof RouteEvaluationSchema>

@@ -69,7 +69,7 @@ export async function getBetterWayRoutes(
   etaMargin: number,
   jamThreshold: number,
 ) {
-  const { setRoutes } = useRoutesStore()
+  const { setRoutes, evaluateAllRoutes } = useRoutesStore()
   const {
     clearAll,
     addTrafficSegments,
@@ -175,6 +175,7 @@ export async function getBetterWayRoutes(
   }
   const finalEta = bestRoute.sections[0]?.summary.duration ?? 0
   const finalDelay = getRouteDelay(bestRoute)
+  evaluateAllRoutes()
   console.log(
     `[BetterWay] Complete: ${iteration} iterations | Traffic segments: ${getCleanedSegments(250, currentRoutes).length} | Stop signs: ${stopSignBoxes.value.length} | Final ETA: ${Math.round(finalEta / 60)}min (delay: ${Math.round(finalDelay / 60)}min)`,
   )

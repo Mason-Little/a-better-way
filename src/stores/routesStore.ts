@@ -8,6 +8,7 @@ import { ref } from 'vue'
 import type { Route } from '@/entities'
 import { useAvoidanceStore } from '@/stores/avoidanceStore'
 import { useMapStore } from '@/stores/mapStore'
+import { evaluateRoutes } from '@/utils/evaluation'
 import { findStopSigns } from '@/utils/stoplight/finder'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -23,6 +24,25 @@ const selectedRouteIndex = ref(0)
 // ─────────────────────────────────────────────────────────────────────────────
 // Actions
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Evaluate all routes against current avoidance zones
+ */
+function evaluateAllRoutes(): void {
+  const { trafficSegments, stopSignBoxes } = useAvoidanceStore()
+
+  if (routes.value.length === 0) return
+
+  const results = evaluateRoutes(routes.value, trafficSegments.value, stopSignBoxes.value)
+
+  // Assign evaluation results directly to routes
+  for (const route of routes.value) {
+    const evaluation = results.get(route.id)
+    if (evaluation) {
+      route.evaluation = evaluation
+    }
+  }
+}
 
 /**
  * Add routes, deduplicating by polyline
@@ -97,5 +117,6 @@ export function useRoutesStore() {
     setRoutes,
     clearRoutes,
     selectRoute,
+    evaluateAllRoutes,
   }
 }

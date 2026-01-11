@@ -9,7 +9,7 @@ export { type RoutePoint, type BoundingBox } from './geo'
 export { type StopSignResult } from './stoplight'
 
 // Route structures
-export { type RouteAction, type Route } from './route'
+export { type RouteAction, type Route, type RouteEvaluation } from './route'
 
 // Routing options and results
 export { type RoutingOptions, type RoutingResult } from './routing'
