@@ -20,15 +20,11 @@ export * from './traffic'
 // Avoidance
 export { type AvoidSnapshot } from './avoidance'
 
-// Route analysis
-
 // Search
 export { type SearchResult } from './search'
 
 // Map configuration
 export { type MapOptions, type MapViewOptions } from './map'
-
-// Mapillary API
 
 // Puck (user location marker)
 export { type PuckOptions, type PuckPosition } from './puck'

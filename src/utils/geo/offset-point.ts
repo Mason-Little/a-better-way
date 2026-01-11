@@ -1,18 +1,10 @@
 import type { RoutePoint } from '@/entities'
 
+import { EARTH_RADIUS_METERS, toDegrees, toRadians } from './constants'
+
 /**
  * Calculate a point offset from a given location in the opposite direction of a bearing.
  */
-
-const EARTH_RADIUS_METERS = 6371000
-
-function toRadians(degrees: number): number {
-  return (degrees * Math.PI) / 180
-}
-
-function toDegrees(radians: number): number {
-  return (radians * 180) / Math.PI
-}
 
 /**
  * Returns a point that is a given distance behind the original point,

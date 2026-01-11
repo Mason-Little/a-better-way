@@ -14,6 +14,7 @@ import type {
   RoutePoint,
 } from '@/entities'
 import { useMapStore } from '@/stores/mapStore'
+import { getBoundingBoxKey } from '@/utils/geo/bounding-box'
 import { findIntersectingSegments } from '@/utils/geo/intersection'
 import { detectStopSign } from '@/utils/stoplight/stop-sign-recognition'
 
@@ -45,11 +46,8 @@ const iterationSnapshots = ref<Map<number, AvoidSnapshot>>(new Map())
 
 /**
  * Generate cache key from coordinates with precision rounding
- * @param lat Latitude
- * @param lng Longitude
- * @param precision Number of decimal places (5 ≈ 1m accuracy)
  */
-function getCacheKey(lat: number, lng: number, precision = 5): string {
+function getCoordinateCacheKey(lat: number, lng: number, precision = 5): string {
   const roundedLat = lat.toFixed(precision)
   const roundedLng = lng.toFixed(precision)
   return `${roundedLat},${roundedLng}`
@@ -67,11 +65,12 @@ async function detectStopSignCached(
   heading: number,
   conf = 0.25,
 ): Promise<boolean> {
-  const cacheKey = getCacheKey(point.lat, point.lng)
+  const cacheKey = getCoordinateCacheKey(point.lat, point.lng)
 
   // Check cache first
   if (stopSignCache.value.has(cacheKey)) {
     const cached = stopSignCache.value.get(cacheKey)!
+    console.log(`Cache hit for ${cacheKey}`)
     return cached
   }
 
@@ -96,23 +95,11 @@ function addTrafficSegments(segments: PrioritizedSegment[]) {
 }
 
 /**
- * Generate a unique key for a bounding box based on its coordinates
- * Using 4 decimal places (~10m accuracy) to handle floating point variations
- */
-function getBoundingBoxKey(box: BoundingBox): string {
-  return `${box.north.toFixed(4)},${box.south.toFixed(4)},${box.east.toFixed(4)},${box.west.toFixed(4)}`
-}
-
-/**
  * Add stop sign bounding boxes to avoid (merges with existing, dedupes by coordinates)
  */
 function addStopSignBoxes(boxes: BoundingBox[]) {
   const existingKeys = new Set(stopSignBoxes.value.map((b) => getBoundingBoxKey(b)))
   const newBoxes = boxes.filter((b) => !existingKeys.has(getBoundingBoxKey(b)))
-
-  console.log(
-    `[AvoidanceStore] Stop sign dedup: ${boxes.length} incoming → ${newBoxes.length} new (${stopSignBoxes.value.length} existing)`,
-  )
 
   if (newBoxes.length === 0) return
 

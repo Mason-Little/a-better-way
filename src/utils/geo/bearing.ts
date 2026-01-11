@@ -1,20 +1,10 @@
 import type { RoutePoint } from '@/entities'
 
+import { toDegrees, toRadians } from './constants'
+
 /**
  * Calculate the bearing (heading) between two geographic points.
  * Returns bearing in degrees (0-360), where 0 = North, 90 = East, etc.
- */
-
-function toRadians(degrees: number): number {
-  return (degrees * Math.PI) / 180
-}
-
-function toDegrees(radians: number): number {
-  return (radians * 180) / Math.PI
-}
-
-/**
- * Calculates the bearing from point A to point B.
  */
 export function calculateBearing(to: RoutePoint, from: RoutePoint): number {
   const lat1 = toRadians(from.lat)

@@ -4,9 +4,14 @@ import {
   calculateBearing,
   createBoundingBox,
   decodePolyline,
+  getBoundingBoxKey,
   getPointBehind,
   isPointInBoundingBox,
 } from '@/utils/geo'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Turn Detection Helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
 function isSharpLeftTurn(action: RouteAction): boolean {
   return (
@@ -16,6 +21,10 @@ function isSharpLeftTurn(action: RouteAction): boolean {
     Math.abs(action.turnAngle) > 60
   )
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stop Sign Detection
+// ─────────────────────────────────────────────────────────────────────────────
 
 async function checkForStopSignAtPoint(point: RoutePoint, heading: number): Promise<boolean> {
   const { detectStopSignCached } = useAvoidanceStore()
@@ -65,21 +74,14 @@ async function findStopSignsForRoute(route: Route): Promise<StopSignResult[]> {
   return stopSignResults
 }
 
-/**
- * Generate a key for a bounding box to identify duplicates
- * Uses 4 decimal places (~10m accuracy) to handle floating point variations
- */
-function getBoundingBoxKey(box: {
-  north: number
-  south: number
-  east: number
-  west: number
-}): string {
-  const centerLat = ((box.north + box.south) / 2).toFixed(4)
-  const centerLng = ((box.east + box.west) / 2).toFixed(4)
-  return `${centerLat},${centerLng}`
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Export
+// ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Find stop signs across multiple routes
+ * Deduplicates results by bounding box center point
+ */
 export async function findStopSigns(routes: Route[]): Promise<StopSignResult[]> {
   const results = await Promise.all(routes.map((route) => findStopSignsForRoute(route)))
   const allResults = results.flat()

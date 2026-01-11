@@ -51,9 +51,6 @@ function setRoutes(newRoutes: Route[]): boolean {
   const existingPolylines = new Set(routes.value.map((r) => r.sections[0]?.polyline))
   const uniqueNewRoutes = newRoutes.filter((r) => !existingPolylines.has(r.sections[0]?.polyline))
 
-  if (uniqueNewRoutes.length < newRoutes.length) {
-  }
-
   if (uniqueNewRoutes.length === 0) {
     return false
   }
