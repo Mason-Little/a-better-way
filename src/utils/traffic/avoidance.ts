@@ -36,6 +36,7 @@ function toPrioritizedSegment(
   index: number,
   total: number,
   confidence: number,
+  flow: { speed: number; jamFactor: number; length: number; freeFlow: number },
   points?: { lat: number; lng: number }[],
 ): PrioritizedSegment | null {
   const segmentId = extractSegmentId(seg.ref)
@@ -46,6 +47,10 @@ function toPrioritizedSegment(
         priority: calculatePriority(index, total),
         dataSource: getDataSource(confidence),
         shape: points,
+        length: flow.length,
+        speed: flow.speed,
+        freeFlow: flow.freeFlow,
+        jamFactor: flow.jamFactor,
       }
     : null
 }
@@ -114,6 +119,12 @@ function extractPrioritizedSegments(item: FlowItem, jamThreshold: number): Prior
           i,
           segmentRefs.length,
           item.currentFlow.confidence,
+          {
+            speed: item.currentFlow.speed,
+            jamFactor: item.currentFlow.jamFactor,
+            length: seg.length,
+            freeFlow: item.currentFlow.freeFlow,
+          },
           shapeMap.get(i),
         ),
       )
@@ -145,6 +156,12 @@ function extractPrioritizedSegments(item: FlowItem, jamThreshold: number): Prior
           segIdx - groupStartIdx,
           groupSize,
           subSegment.confidence,
+          {
+            speed: subSegment.speed,
+            jamFactor: subSegment.jamFactor,
+            length: segLength,
+            freeFlow: subSegment.freeFlow,
+          },
           shapeMap.get(segIdx), // Use the original index from segmentRefs
         )
         if (prioritized) results.push(prioritized)

@@ -147,6 +147,18 @@ const hasStopSignIntersections = computed(
       </div>
     </div>
 
+    <div v-if="route.evaluation?.totalAvoidanceScore" class="mb-2 flex flex-wrap gap-1.5">
+      <div
+        v-if="route.evaluation?.totalAvoidanceScore"
+        class="flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5"
+        :title="`Passes through ${route.evaluation?.totalAvoidanceScore} stop sign zone(s)`"
+      >
+        <span class="text-[10px] font-bold text-amber-600">{{
+          route.evaluation?.totalAvoidanceScore
+        }}</span>
+      </div>
+    </div>
+
     <!-- Main Stats -->
     <div class="space-y-0.5">
       <div

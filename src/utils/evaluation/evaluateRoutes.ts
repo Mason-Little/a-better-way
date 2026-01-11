@@ -4,9 +4,8 @@
  */
 
 import type { BoundingBox, PrioritizedSegment, Route, RouteEvaluation } from '@/entities'
-import { isPointInBoundingBox } from '@/utils/geo/bounding-box'
-import { decodePolyline } from '@/utils/geo/polyline'
-import { findMatchingSegments } from '@/utils/traffic/matcher'
+
+import { calculateRouteCost } from './scoring'
 
 /**
  * Evaluate routes against avoidance zones
@@ -20,32 +19,12 @@ export function evaluateRoutes(
   const results = new Map<string, RouteEvaluation>()
 
   for (const route of routes) {
-    // 1. Check traffic segment intersections for this single route
-    const { matches: intersectingSegments } = findMatchingSegments(trafficSegments, [route])
-
-    // 2. Check stop sign box intersections by decoding polyline
-    const polyline = route.sections[0]?.polyline
-    let stopSignCount = 0
-
-    if (polyline && stopSignBoxes.length > 0) {
-      const points = decodePolyline(polyline)
-
-      // Check if any route point falls within any stop sign bounding box
-      for (const box of stopSignBoxes) {
-        const hasIntersection = points.some((point) => isPointInBoundingBox(point, box))
-        if (hasIntersection) {
-          stopSignCount++
-        }
-      }
-    }
-
-    // 3. Calculate total avoidance score (simple sum for now)
-    const totalScore = intersectingSegments.length + stopSignCount
+    const score = calculateRouteCost(route, trafficSegments, stopSignBoxes)
 
     const evaluation: RouteEvaluation = {
-      intersectingTrafficSegments: intersectingSegments.length,
-      intersectingStopSignBoxes: stopSignCount,
-      totalAvoidanceScore: totalScore,
+      intersectingTrafficSegments: score.intersectingSegments,
+      intersectingStopSignBoxes: score.stopSignCount,
+      totalAvoidanceScore: score.totalScore, // Now represents total delay in seconds
     }
 
     results.set(route.id, evaluation)

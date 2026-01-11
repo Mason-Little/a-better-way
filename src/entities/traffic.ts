@@ -74,6 +74,10 @@ const PrioritizedSegmentSchema = z.object({
   priority: z.number(),
   dataSource: z.enum(['realtime', 'historical', 'speedLimit']).optional(),
   shape: z.array(z.object({ lat: z.number(), lng: z.number() })).optional(),
+  length: z.number().optional(),
+  speed: z.number().optional(),
+  freeFlow: z.number().optional(),
+  jamFactor: z.number().optional(),
 })
 
 export type TrafficFlowData = z.infer<typeof TrafficFlowDataSchema>
