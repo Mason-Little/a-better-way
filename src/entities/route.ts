@@ -6,6 +6,19 @@ import { z } from 'zod/v4'
 
 import { BoundingBoxSchema, RoutePointSchema } from './geo'
 
+const OffsetSchema = z.number().describe('Offset in polyline')
+const DurationSchema = z.number().describe('Duration in seconds')
+const LengthSchema = z.number().describe('Length in meters')
+
+const SPAN_TYPES = [
+  'dynamicSpeedInfo',
+  'functionalClass',
+  'gates',
+  'railwayCrossings',
+  'incidents',
+  'segmentRef',
+] as const
+
 const AvoidInputSchema = z
   .object({
     segments: z.array(z.string()).describe('Segment IDs that were avoided'),
@@ -21,13 +34,13 @@ const RoadInfoSchema = z.object({
 const RouteActionSchema = z
   .object({
     action: z.string().describe("Type of action (e.g., 'depart', 'arrive', 'turn')"),
-    duration: z.number().describe('Duration in seconds'),
-    length: z.number().describe('Length in meters'),
+    duration: DurationSchema,
+    length: LengthSchema,
     instruction: z.string().optional().describe('Human-readable instruction'),
     direction: z.string().optional().describe("Direction (e.g., 'left', 'right')"),
     severity: z.string().optional().describe("Turn severity (e.g., 'light', 'normal')"),
     turnAngle: z.float32().optional().describe('Turn angle in degrees'),
-    offset: z.number().describe('Offset in polyline'),
+    offset: OffsetSchema,
     exit: z.number().optional().describe('Exit number for roundabouts/highways'),
     nextRoad: RoadInfoSchema.optional().describe('Road name after this action'),
     currentRoad: RoadInfoSchema.optional().describe('Current road info'),
@@ -40,8 +53,8 @@ const RouteIncidentSchema = z
     type: z.string().describe("Type (e.g., 'accident', 'construction')"),
     severity: z.string().optional().describe("Severity (e.g., 'minor', 'major')"),
     description: z.string().optional().describe('Description of incident'),
-    startOffset: z.number().optional().describe('Start offset in polyline'),
-    endOffset: z.number().optional().describe('End offset in polyline'),
+    startOffset: OffsetSchema.optional().describe('Start offset in polyline'),
+    endOffset: OffsetSchema.optional().describe('End offset in polyline'),
   })
   .describe('Traffic incident on the route')
 
@@ -53,20 +66,21 @@ const DynamicSpeedInfoSchema = z.object({
 
 const RouteSpanSchema = z
   .object({
-    offset: z.number().describe('Offset in polyline where span starts'),
+    offset: OffsetSchema.describe('Offset in polyline where span starts'),
     functionalClass: z.number().optional().describe('Road class (1=highway, 5=local)'),
     dynamicSpeedInfo: DynamicSpeedInfoSchema.optional().describe('Traffic speed info'),
     gates: z.boolean().optional().describe('Gate/barrier present'),
     railwayCrossings: z.boolean().optional().describe('Railway crossing present'),
     incidents: z.array(z.number()).optional().describe('Incident indices'),
+    segmentRef: z.array(z.string()).optional().describe('Segment references'),
   })
   .describe('Span data for a segment of the route')
 
 const RouteSummarySchema = z.object({
-  duration: z.number().describe('Duration in seconds'),
-  length: z.number().describe('Length in meters'),
-  baseDuration: z.number().optional().describe('Base duration without traffic'),
-  typicalDuration: z.number().optional().describe('Typical duration'),
+  duration: DurationSchema,
+  length: LengthSchema,
+  baseDuration: DurationSchema.optional().describe('Base duration without traffic'),
+  typicalDuration: DurationSchema.optional().describe('Typical duration'),
 })
 
 const PlaceLocationSchema = z.object({
@@ -124,9 +138,7 @@ const RouteReturnTypeSchema = z
   .enum(['polyline', 'summary', 'typicalDuration', 'turnByTurnActions', 'incidents'])
   .describe('Return types for route response')
 
-const RouteSpanTypeSchema = z
-  .enum(['dynamicSpeedInfo', 'functionalClass', 'gates', 'railwayCrossings', 'incidents'])
-  .describe('Span types for detailed segment data')
+const RouteSpanTypeSchema = z.enum(SPAN_TYPES).describe('Span types for detailed segment data')
 
 export type RouteAction = z.infer<typeof RouteActionSchema>
 export type Route = z.infer<typeof RouteSchema>

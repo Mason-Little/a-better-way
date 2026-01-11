@@ -14,6 +14,7 @@ async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
     routingMode: 'fast',
     alternatives: 5,
     return: ['turnByTurnActions', 'summary', 'polyline'],
+    spans: ['segmentRef'],
   })
   return result.routes
 }
@@ -46,6 +47,7 @@ async function calculateBetterRoute(
         areas: formattedStopSignAreas,
       },
       return: ['turnByTurnActions', 'summary', 'polyline'],
+      spans: ['segmentRef'],
       alternatives: 5,
       transportMode: 'car',
     })
