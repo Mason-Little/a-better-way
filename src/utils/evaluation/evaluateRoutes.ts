@@ -5,8 +5,8 @@
 
 import type { BoundingBox, PrioritizedSegment, Route, RouteEvaluation } from '@/entities'
 import { isPointInBoundingBox } from '@/utils/geo/bounding-box'
-import { findIntersectingSegments } from '@/utils/geo/intersection'
 import { decodePolyline } from '@/utils/geo/polyline'
+import { findMatchingSegments } from '@/utils/traffic/matcher'
 
 /**
  * Evaluate routes against avoidance zones
@@ -20,13 +20,8 @@ export function evaluateRoutes(
   const results = new Map<string, RouteEvaluation>()
 
   for (const route of routes) {
-    console.log(route)
     // 1. Check traffic segment intersections for this single route
-    const { intersecting: intersectingSegments } = findIntersectingSegments(
-      trafficSegments,
-      [route],
-      20,
-    )
+    const { matches: intersectingSegments } = findMatchingSegments(trafficSegments, [route])
 
     // 2. Check stop sign box intersections by decoding polyline
     const polyline = route.sections[0]?.polyline

@@ -8,8 +8,8 @@ import { ref } from 'vue'
 import type { BoundingBox, FlowResponse, PrioritizedSegment, Route, RoutePoint } from '@/entities'
 import { useMapStore } from '@/stores/mapStore'
 import { getBoundingBoxKey } from '@/utils/geo/bounding-box'
-import { findIntersectingSegments } from '@/utils/geo/intersection'
 import { detectStopSign } from '@/utils/stoplight/stop-sign-recognition'
+import { findMatchingSegments } from '@/utils/traffic/matcher'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared State
@@ -117,8 +117,10 @@ function getCleanedSegments(maxSegments = 250, routes: Route[] = []): string[] {
     return sorted.slice(0, maxSegments).map((s) => s.id)
   }
 
-  // 3. Separate into intersecting vs non-intersecting using optimized BBox check
-  const { intersecting, others } = findIntersectingSegments(allSegments, routes, 20)
+  // 3. Separate into intersecting vs non-intersecting using segments IDs
+  const { matches: intersecting, others } = findMatchingSegments(allSegments, routes)
+
+  console.log(`Found ${intersecting.length} intersecting segments and ${others.length} others`)
 
   // 4. Sort both lists by priority (descending)
   intersecting.sort((a, b) => b.priority - a.priority)

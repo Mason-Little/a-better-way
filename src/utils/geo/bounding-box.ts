@@ -3,7 +3,7 @@
  * Shared geographic bounding box calculations
  */
 
-import type { BoundingBox, PrioritizedSegment, Route, RoutePoint } from '@/entities'
+import type { BoundingBox, Route, RoutePoint } from '@/entities'
 
 import { getLngDegPerMeter, LAT_DEG_PER_METER } from './constants'
 import { decodePolyline } from './polyline'
@@ -90,16 +90,6 @@ export function computeRouteBoundingBox(route: Route): BoundingBox {
   return computeBoundingBoxFromPoints(points)
 }
 
-/**
- * Compute bounding box from a traffic segment's shape
- */
-export function computeSegmentBoundingBox(segment: PrioritizedSegment): BoundingBox {
-  if (!segment.shape || segment.shape.length === 0) {
-    return { north: 0, south: 0, east: 0, west: 0 }
-  }
-  return computeBoundingBoxFromPoints(segment.shape)
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Bounding Box Operations
 // ─────────────────────────────────────────────────────────────────────────────
@@ -152,13 +142,6 @@ export function isRouteWithinBoundingBox(route: Route, bbox: BoundingBox): boole
     routeBbox.east <= bbox.east &&
     routeBbox.west >= bbox.west
   )
-}
-
-/**
- * Check if two bounding boxes intersect (overlap)
- */
-export function doBoundingBoxesIntersect(a: BoundingBox, b: BoundingBox): boolean {
-  return a.north >= b.south && a.south <= b.north && a.east >= b.west && a.west <= b.east
 }
 
 /**

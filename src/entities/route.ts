@@ -72,7 +72,10 @@ const RouteSpanSchema = z
     gates: z.boolean().optional().describe('Gate/barrier present'),
     railwayCrossings: z.boolean().optional().describe('Railway crossing present'),
     incidents: z.array(z.number()).optional().describe('Incident indices'),
-    segmentRef: z.array(z.string()).optional().describe('Segment references'),
+    segmentRef: z
+      .union([z.string(), z.array(z.string())])
+      .optional()
+      .describe('Segment references'),
   })
   .describe('Span data for a segment of the route')
 

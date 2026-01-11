@@ -1,7 +1,7 @@
 import type { FlowItem, FlowResponse, TrafficFlowData } from '@/entities'
 import type { PrioritizedSegment } from '@/entities/traffic'
 
-import { expandSegmentRef, extractSegmentId } from './segment-parser'
+import { extractSegmentId } from './segment-parser'
 
 /**
  * Check if traffic flow exceeds jam factor threshold
@@ -36,11 +36,9 @@ function toPrioritizedSegment(
   index: number,
   total: number,
   confidence: number,
-  refReplacements?: Record<string, string>,
   points?: { lat: number; lng: number }[],
 ): PrioritizedSegment | null {
-  const expandedRef = expandSegmentRef(seg.ref, refReplacements)
-  const segmentId = extractSegmentId(expandedRef)
+  const segmentId = extractSegmentId(seg.ref)
 
   return segmentId
     ? {
@@ -94,11 +92,7 @@ function mapShapeToSegments(item: FlowItem): Map<number, { lat: number; lng: num
  * Extract segments with priority based on subsegment mapping.
  * Uses a single-pass rolling cumulative length approach.
  */
-function extractPrioritizedSegments(
-  item: FlowItem,
-  refReplacements: Record<string, string>,
-  jamThreshold: number,
-): PrioritizedSegment[] {
+function extractPrioritizedSegments(item: FlowItem, jamThreshold: number): PrioritizedSegment[] {
   const segmentRefs = item.location.segmentRef?.segments
   if (!segmentRefs?.length) return []
 
@@ -120,7 +114,6 @@ function extractPrioritizedSegments(
           i,
           segmentRefs.length,
           item.currentFlow.confidence,
-          refReplacements,
           shapeMap.get(i),
         ),
       )
@@ -152,7 +145,6 @@ function extractPrioritizedSegments(
           segIdx - groupStartIdx,
           groupSize,
           subSegment.confidence,
-          refReplacements,
           shapeMap.get(segIdx), // Use the original index from segmentRefs
         )
         if (prioritized) results.push(prioritized)
@@ -175,12 +167,11 @@ export function getCongestedSegments(
 ): PrioritizedSegment[] {
   if (!data?.results) return []
 
-  const refReplacements = data.refReplacements
   const segments: PrioritizedSegment[] = []
 
   for (const item of data.results) {
     if (!isJammed(item.currentFlow, jamThreshold)) continue
-    segments.push(...extractPrioritizedSegments(item, refReplacements, jamThreshold))
+    segments.push(...extractPrioritizedSegments(item, jamThreshold))
   }
 
   return segments
