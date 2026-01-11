@@ -42,6 +42,13 @@ function evaluateAllRoutes(): void {
       route.evaluation = evaluation
     }
   }
+
+  // Sort routes by total calculated time (base + penalty) low to high
+  routes.value.sort((a, b) => {
+    const timeA = a.evaluation?.totalAvoidanceScore ?? 0
+    const timeB = b.evaluation?.totalAvoidanceScore ?? 0
+    return timeA - timeB
+  })
 }
 
 /**

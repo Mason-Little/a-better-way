@@ -25,7 +25,10 @@ const isOptimized = computed(() => (route.iteration ?? 0) > 0)
 
 // Format duration as "X min" or "X hr Y min"
 const formattedDuration = computed(() => {
-  const seconds = summary.value?.duration ?? 0
+  const baseDuration = summary.value?.baseDuration ?? 0
+  const penalty = route.evaluation?.totalAvoidanceScore ?? 0
+  const seconds = baseDuration + penalty
+
   const minutes = Math.round(seconds / 60)
 
   if (minutes >= 60) {
@@ -43,17 +46,9 @@ const formattedDistance = computed(() => {
   return `${km.toFixed(1)} km`
 })
 
-// Calculate if this route has traffic delay
-const hasTrafficDelay = computed(() => {
-  const baseDuration = summary.value?.baseDuration ?? 0
-  const duration = summary.value?.duration ?? 0
-  return duration > baseDuration * 1.1 // More than 10% delay
-})
-
 const trafficDelayMinutes = computed(() => {
-  const baseDuration = summary.value?.baseDuration ?? 0
-  const duration = summary.value?.duration ?? 0
-  return Math.round((duration - baseDuration) / 60)
+  const penalty = route.evaluation?.totalAvoidanceScore ?? 0
+  return Math.round(penalty / 60)
 })
 
 // Evaluation badge visibility
@@ -109,7 +104,7 @@ const hasStopSignIntersections = computed(
 
       <!-- Traffic Badge -->
       <div
-        v-if="hasTrafficDelay"
+        v-if="trafficDelayMinutes > 0"
         class="flex items-center gap-1 rounded-full bg-orange-500/10 px-2 py-0.5"
       >
         <span class="block h-1 w-1 rounded-full bg-orange-500" />
