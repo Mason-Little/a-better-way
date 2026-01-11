@@ -5,14 +5,7 @@
 
 import { ref } from 'vue'
 
-import type {
-  AvoidSnapshot,
-  BoundingBox,
-  FlowResponse,
-  PrioritizedSegment,
-  Route,
-  RoutePoint,
-} from '@/entities'
+import type { BoundingBox, FlowResponse, PrioritizedSegment, Route, RoutePoint } from '@/entities'
 import { useMapStore } from '@/stores/mapStore'
 import { getBoundingBoxKey } from '@/utils/geo/bounding-box'
 import { findIntersectingSegments } from '@/utils/geo/intersection'
@@ -36,9 +29,6 @@ const cachedTrafficFlow = ref<FlowResponse | null>(null)
 
 /** Stop sign detection cache (lat,lng key -> boolean) */
 const stopSignCache = ref<Map<string, boolean>>(new Map())
-
-/** Avoid zone snapshots per iteration (for heuristics) */
-const iterationSnapshots = ref<Map<number, AvoidSnapshot>>(new Map())
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Cache Key Generation
@@ -147,26 +137,6 @@ function getCleanedSegments(maxSegments = 250, routes: Route[] = []): string[] {
 }
 
 /**
- * Take a snapshot of current avoid zones for an iteration
- */
-function takeSnapshot(iteration: number, routes: Route[] = []): void {
-  const snapshot: AvoidSnapshot = {
-    segments: getCleanedSegments(250, routes),
-    stopSignBoxes: [...stopSignBoxes.value],
-    timestamp: Date.now(),
-  }
-
-  iterationSnapshots.value.set(iteration, snapshot)
-}
-
-/**
- * Get a snapshot for a specific iteration
- */
-function getSnapshot(iteration: number): AvoidSnapshot | undefined {
-  return iterationSnapshots.value.get(iteration)
-}
-
-/**
  * Clear all avoid zones
  */
 function clearAvoidZones() {
@@ -218,13 +188,12 @@ function clearTrafficCache(): void {
 }
 
 /**
- * Clear all avoidance data including caches and snapshots
+ * Clear all avoidance data including caches
  */
 function clearAll(): void {
   clearAvoidZones()
   clearTrafficCache()
   stopSignCache.value.clear()
-  iterationSnapshots.value.clear()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -242,15 +211,12 @@ export function useAvoidanceStore() {
     trafficCoverageBbox,
     cachedTrafficFlow,
     stopSignCache,
-    iterationSnapshots,
 
     // Actions
     detectStopSignCached,
     addTrafficSegments,
     addStopSignBoxes,
     getCleanedSegments,
-    takeSnapshot,
-    getSnapshot,
     clearAvoidZones,
     getTrafficCoverageBbox,
     setTrafficCoverageBbox,

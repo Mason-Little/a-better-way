@@ -12,13 +12,13 @@ export { type StopSignResult } from './stoplight'
 export { type RouteAction, type Route, type RouteEvaluation } from './route'
 
 // Routing options and results
-export { type RoutingOptions, type RoutingResult } from './routing'
+export { type RoutingOptions, type RoutingResult } from './route'
 
 // Traffic analysis
 export * from './traffic'
 
 // Avoidance
-export { type AvoidSnapshot } from './avoidance'
+export { type AvoidInput } from './route'
 
 // Search
 export { type SearchResult } from './search'

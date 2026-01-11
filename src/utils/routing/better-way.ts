@@ -1,4 +1,4 @@
-import type { BoundingBox, Route, RoutePoint } from '@/entities'
+import type { AvoidInput, BoundingBox, Route, RoutePoint } from '@/entities'
 import { useAvoidanceStore } from '@/stores/avoidanceStore'
 import { useRoutesStore } from '@/stores/routesStore'
 import { calculateRoute } from '@/lib/here-sdk'
@@ -70,14 +70,8 @@ export async function getBetterWayRoutes(
   jamThreshold: number,
 ) {
   const { setRoutes, evaluateAllRoutes } = useRoutesStore()
-  const {
-    clearAll,
-    addTrafficSegments,
-    addStopSignBoxes,
-    getCleanedSegments,
-    stopSignBoxes,
-    takeSnapshot,
-  } = useAvoidanceStore()
+  const { clearAll, addTrafficSegments, addStopSignBoxes, getCleanedSegments, stopSignBoxes } =
+    useAvoidanceStore()
 
   // Clear any previous avoid zones and traffic cache
   clearAll()
@@ -131,9 +125,6 @@ export async function getBetterWayRoutes(
     addTrafficSegments(trafficSegments)
     addStopSignBoxes(newStopSignBoxes)
 
-    // Capture snapshot before route calculation
-    takeSnapshot(iteration, currentRoutes)
-
     // Calculate new routes avoiding accumulated zones
     const improvedRoutes = await calculateBetterRoute(start, end, {
       segments: getCleanedSegments(250, currentRoutes),
@@ -166,7 +157,12 @@ export async function getBetterWayRoutes(
     bestRoute = newBest
     currentRoutes = improvedRoutes
 
-    const taggedImprovedRoutes = improvedRoutes.map((r) => ({ ...r, iteration }))
+    const avoidInput: AvoidInput = {
+      segments: getCleanedSegments(250, currentRoutes),
+      stopSignBoxes: stopSignBoxes.value,
+    }
+
+    const taggedImprovedRoutes = improvedRoutes.map((r) => ({ ...r, iteration, avoidInput }))
     const hasNewRoutes = setRoutes(taggedImprovedRoutes)
     if (!hasNewRoutes) {
       console.log(`[BetterWay] Early stop: All routes duplicates (iteration ${iteration})`)

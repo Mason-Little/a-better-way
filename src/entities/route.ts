@@ -4,7 +4,14 @@
 
 import { z } from 'zod/v4'
 
-import { RoutePointSchema } from './geo'
+import { BoundingBoxSchema, RoutePointSchema } from './geo'
+
+const AvoidInputSchema = z
+  .object({
+    segments: z.array(z.string()).describe('Segment IDs that were avoided'),
+    stopSignBoxes: z.array(BoundingBoxSchema).describe('Stop sign bounding boxes avoided'),
+  })
+  .describe('Snapshot of avoid zones at a specific iteration')
 
 const RoadInfoSchema = z.object({
   name: z.array(z.object({ value: z.string(), language: z.string() })).optional(),
@@ -66,6 +73,14 @@ const PlaceLocationSchema = z.object({
   place: z.object({ location: RoutePointSchema }),
 })
 
+const RouteNoticeSchema = z
+  .object({
+    title: z.string().describe('Notice title'),
+    code: z.string().describe('Notice code'),
+    severity: z.string().describe('Notice severity'),
+  })
+  .describe('Notice/warning for a route section')
+
 const RouteSectionSchema = z
   .object({
     id: z.string().describe('Unique section ID'),
@@ -75,6 +90,7 @@ const RouteSectionSchema = z
     polyline: z.string().describe('Encoded polyline geometry'),
     summary: RouteSummarySchema.describe('Summary with distance and duration'),
     transport: z.object({ mode: z.string() }).describe('Transport mode used'),
+    notices: z.array(RouteNoticeSchema).optional().describe('Notices/warnings for this section'),
     actions: z.array(RouteActionSchema).optional().describe('Actions/maneuvers'),
     turnByTurnActions: z.array(RouteActionSchema).optional().describe('Turn-by-turn actions'),
     incidents: z.array(RouteIncidentSchema).optional().describe('Traffic incidents'),
@@ -94,23 +110,59 @@ const RouteEvaluationSchema = z
   })
   .describe('Evaluation result for a route indicating avoidance zone intersections')
 
-export const RouteSchema = z
+const RouteSchema = z
   .object({
     id: z.string().describe('Unique route ID'),
     sections: z.array(RouteSectionSchema).describe('Route sections'),
     iteration: z.number().optional().describe('Algorithm iteration number'),
     evaluation: RouteEvaluationSchema.optional().describe('Route evaluation results'),
+    avoidInput: AvoidInputSchema.optional().describe('Avoid input used for route calculation'),
   })
   .describe('Complete route')
 
-export const RouteReturnTypeSchema = z
+const RouteReturnTypeSchema = z
   .enum(['polyline', 'summary', 'typicalDuration', 'turnByTurnActions', 'incidents'])
   .describe('Return types for route response')
 
-export const RouteSpanTypeSchema = z
+const RouteSpanTypeSchema = z
   .enum(['dynamicSpeedInfo', 'functionalClass', 'gates', 'railwayCrossings', 'incidents'])
   .describe('Span types for detailed segment data')
 
 export type RouteAction = z.infer<typeof RouteActionSchema>
 export type Route = z.infer<typeof RouteSchema>
 export type RouteEvaluation = z.infer<typeof RouteEvaluationSchema>
+export type AvoidInput = z.infer<typeof AvoidInputSchema>
+
+const RoutingOptionsSchema = z
+  .object({
+    origin: RoutePointSchema.describe('Origin coordinates'),
+    destination: RoutePointSchema.describe('Destination coordinates'),
+    routingMode: z.enum(['fast', 'short']).optional().describe("'fast' = time, 'short' = distance"),
+    transportMode: z
+      .enum(['car', 'truck', 'pedestrian', 'bicycle', 'scooter'])
+      .optional()
+      .describe('Transport mode'),
+    return: z.array(RouteReturnTypeSchema).optional().describe('Return types for response'),
+    spans: z.array(RouteSpanTypeSchema).optional().describe('Span types for segment data'),
+    departureTime: z.string().optional().describe("Departure time (ISO 8601 or 'any')"),
+    alternatives: z.number().optional().describe('Number of alternative routes (0-6)'),
+    avoid: z
+      .object({
+        features: z.array(z.string()).optional().describe("Features to avoid (e.g., 'tollRoad')"),
+        areas: z.array(z.string()).optional().describe('Bounding boxes to avoid'),
+        segments: z.array(z.string()).optional().describe('Segment IDs to avoid'),
+      })
+      .optional()
+      .describe('Areas/features to avoid'),
+    via: z.array(RoutePointSchema).optional().describe('Intermediate waypoints'),
+  })
+  .describe('Routing options for API request')
+
+const RoutingResultSchema = z
+  .object({
+    routes: z.array(RouteSchema).describe('Calculated routes'),
+  })
+  .describe('Routing API response')
+
+export type RoutingOptions = z.infer<typeof RoutingOptionsSchema>
+export type RoutingResult = z.infer<typeof RoutingResultSchema>

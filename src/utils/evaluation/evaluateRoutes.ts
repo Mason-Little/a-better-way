@@ -20,6 +20,7 @@ export function evaluateRoutes(
   const results = new Map<string, RouteEvaluation>()
 
   for (const route of routes) {
+    console.log(route)
     // 1. Check traffic segment intersections for this single route
     const { intersecting: intersectingSegments } = findIntersectingSegments(
       trafficSegments,
