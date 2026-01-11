@@ -48,19 +48,79 @@ function evaluateAllRoutes(): void {
  * Add routes, deduplicating by polyline
  */
 function setRoutes(newRoutes: Route[]): boolean {
-  const existingPolylines = new Set(routes.value.map((r) => r.sections[0]?.polyline))
-  const uniqueNewRoutes = newRoutes.filter((r) => !existingPolylines.has(r.sections[0]?.polyline))
+  const addedRoutes: Route[] = []
 
-  if (uniqueNewRoutes.length === 0) {
+  // Create a map of existing polylines to routes for quick lookup
+  const polylineToRoute = new Map<string, Route>()
+  for (const r of routes.value) {
+    if (r.sections[0]?.polyline) {
+      polylineToRoute.set(r.sections[0].polyline, r)
+    }
+  }
+
+  for (const newRoute of newRoutes) {
+    const polyline = newRoute.sections[0]?.polyline
+    if (!polyline) continue
+
+    if (polylineToRoute.has(polyline)) {
+      // Route exists: Merge avoidInput
+      const existingRoute = polylineToRoute.get(polyline)!
+
+      if (newRoute.avoidInput) {
+        if (!existingRoute.avoidInput) {
+          existingRoute.avoidInput = { segments: [], stopSignBoxes: [] }
+        }
+
+        // Merge segments
+        const inputsMerged = existingRoute.avoidInput
+        const existingSegments = new Set(inputsMerged.segments)
+        let segmentsAdded = 0
+        newRoute.avoidInput.segments.forEach((segId) => {
+          if (!existingSegments.has(segId)) {
+            inputsMerged.segments.push(segId)
+            existingSegments.add(segId)
+            segmentsAdded++
+          }
+        })
+
+        // Merge stopSignBoxes
+        const existingBoxesStr = new Set(
+          inputsMerged.stopSignBoxes.map((b) => `${b.north},${b.south},${b.east},${b.west}`),
+        )
+        let boxesAdded = 0
+        newRoute.avoidInput.stopSignBoxes.forEach((box) => {
+          const key = `${box.north},${box.south},${box.east},${box.west}`
+          if (!existingBoxesStr.has(key)) {
+            inputsMerged.stopSignBoxes.push(box)
+            existingBoxesStr.add(key)
+            boxesAdded++
+          }
+        })
+
+        if (segmentsAdded > 0 || boxesAdded > 0) {
+          console.log(
+            `[RoutesStore] Merged ${segmentsAdded} segments and ${boxesAdded} stop signs into existing route`,
+          )
+        }
+      }
+    } else {
+      // New distinct route
+      addedRoutes.push(newRoute)
+      // Add to map to handle duplicates within the same batch
+      polylineToRoute.set(polyline, newRoute)
+    }
+  }
+
+  if (addedRoutes.length === 0) {
     return false
   }
 
-  routes.value.push(...uniqueNewRoutes)
+  routes.value.push(...addedRoutes)
   const { drawRoutes } = useMapStore()
   drawRoutes({ routes: routes.value })
 
-  // Scan for stop signs in background
-  findStopSigns(uniqueNewRoutes).then((results) => {
+  // Scan for stop signs in background for newly added routes
+  findStopSigns(addedRoutes).then((results) => {
     if (results.length > 0) {
       console.log(`[RoutesStore] Found ${results.length} stop signs`)
       const { addStopSignBoxes } = useAvoidanceStore()
