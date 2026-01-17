@@ -2,7 +2,8 @@
   "name": "a-better-way-monorepo",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @a-better-way/web dev",
+    "dev-up": "bash scripts/ci/up.sh",
+    "dev": "bash scripts/ci/start.sh",
     "build": "pnpm --filter @a-better-way/web build",
     "test": "pnpm --filter @a-better-way/web test",
     "lint": "pnpm --filter @a-better-way/web lint"
