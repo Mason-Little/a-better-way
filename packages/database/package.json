@@ -1,0 +1,16 @@
+{
+  "name": "@a-better-way/database",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "db:push": "prisma db push"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.9",
+    "prisma": "^6.2.1"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.1"
+  }
+}

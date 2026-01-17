@@ -1,5 +1,6 @@
 packages:
   - "projects/*"
+  - "packages/*"
 
 ignoredBuiltDependencies:
   - lefthook
