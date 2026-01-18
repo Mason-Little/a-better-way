@@ -1,23 +1,13 @@
-/**
- * HERE Maps Layer Utilities
- * Functions for creating and managing map layers
- */
-
 import { getPlatform } from './platform'
 
 export interface DefaultLayerOptions {
-  /** Language for map labels (default: 'en') */
   language?: string
-  /** Enable POI display */
   pois?: boolean
 }
 
-/**
- * Create default layers with HARP engine for modern 3D vector rendering
- */
+/** Create default map layers with HARP 3D vector rendering engine */
 export function createDefaultLayers(options: DefaultLayerOptions = {}) {
   const platform = getPlatform()
-
   return platform.createDefaultLayers({
     engineType: H.Map.EngineType.HARP,
     lg: options.language ?? 'en',

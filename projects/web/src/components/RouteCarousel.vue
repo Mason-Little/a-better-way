@@ -3,19 +3,11 @@ import { useRoutesStore } from '@/stores/routesStore'
 import RouteCard from '@/components/RouteCard.vue'
 import BetterCarousel from '@/components/ui/BetterCarousel.vue'
 
-const { routes, selectedRouteIndex, selectRoute } = useRoutesStore()
-
-function handleRouteSelect(index: number) {
-  selectRoute(index)
-}
-
-function handleCarouselChange(index: number) {
-  selectRoute(index)
-}
+const store = useRoutesStore()
 </script>
 
 <template>
-  <div v-if="routes.length > 0" class="route-carousel w-full">
+  <div v-if="store.routes.length > 0" class="route-carousel w-full">
     <div class="mb-3 flex items-center justify-between px-1">
       <h3 class="text-[10px] font-bold tracking-widest text-gray-500 uppercase">
         Available Routes
@@ -23,18 +15,18 @@ function handleCarouselChange(index: number) {
       <span
         class="rounded-full bg-white/50 px-2 py-0.5 text-[10px] font-medium text-blue-600 ring-1 ring-black/5"
       >
-        {{ routes.length }} found
+        {{ store.routes.length }} found
       </span>
     </div>
 
-    <BetterCarousel :item-count="routes.length" @change="handleCarouselChange">
+    <BetterCarousel :item-count="store.routes.length" @change="store.select">
       <RouteCard
-        v-for="(route, index) in routes"
+        v-for="(route, index) in store.routes"
         :key="route.id"
         :route="route"
         :index="index"
-        :selected="index === selectedRouteIndex"
-        @select="handleRouteSelect(index)"
+        :selected="index === store.selectedIndex"
+        @select="store.select(index)"
       />
     </BetterCarousel>
   </div>

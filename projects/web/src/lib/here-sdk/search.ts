@@ -1,8 +1,3 @@
-/**
- * HERE Maps Search Service
- * Handles geocoding and autosuggest functionality
- */
-
 import type { SearchResult } from '@/entities'
 
 import { getPlatform } from './platform'
@@ -21,12 +16,12 @@ export async function searchPlaces(
     service.autosuggest(
       {
         q: query,
-        at: at ? `${at.lat},${at.lng}` : '37.7749,-122.4194', // Default to SF if not provided
+        at: at ? `${at.lat},${at.lng}` : '37.7749,-122.4194',
         limit: 5,
       },
       (result) => {
         const items = result.items
-          .filter((item) => item.position) // Only returned items with position
+          .filter((item) => item.position)
           .map((item) => ({
             id: item.id,
             title: item.title,
@@ -35,9 +30,7 @@ export async function searchPlaces(
           }))
         resolve(items)
       },
-      (error: Error) => {
-        reject(error)
-      },
+      (error: Error) => reject(error),
     )
   })
 }

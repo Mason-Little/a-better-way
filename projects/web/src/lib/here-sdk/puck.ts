@@ -1,22 +1,8 @@
-/**
- * HERE Maps Puck (User Location Marker)
- *
- * A "puck" is a visual indicator representing the user's current location on the map.
- * This module provides a full-featured puck implementation with:
- *
- * - Smooth position updates for live navigation
- * - Rotation support to show heading/bearing
- * - Customizable appearance (size, colors, accuracy ring)
- * - Both regular markers and DOM markers for rich styling
- * - Group management for organizing puck-related objects
- */
-
 import type { PuckOptions, PuckPosition } from '@/entities'
 
-// Default configuration
 const DEFAULTS: Required<PuckOptions> = {
   size: 24,
-  primaryColor: '#3B82F6', // Blue
+  primaryColor: '#3B82F6',
   borderColor: '#FFFFFF',
   showAccuracyRing: true,
   accuracyRingColor: 'rgba(59, 130, 246, 0.2)',
@@ -25,10 +11,7 @@ const DEFAULTS: Required<PuckOptions> = {
   zIndex: 1000,
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Puck Class
-// ─────────────────────────────────────────────────────────────────────────────
-
+/** User location puck marker with heading indicator and accuracy ring */
 export class Puck {
   private map: H.Map
   private options: Required<PuckOptions>
@@ -44,88 +27,49 @@ export class Puck {
     this.group = new H.map.Group()
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Public API
-  // ───────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Show the puck on the map
-   * Must call setPosition() first or provide initial position
-   */
+  /** Show the puck on the map */
   show(initialPosition?: PuckPosition): void {
-    if (initialPosition) {
-      this.currentPosition = initialPosition
-    }
-
+    if (initialPosition) this.currentPosition = initialPosition
     if (!this.currentPosition) {
-      console.warn('[Puck] Cannot show without a position. Call setPosition() first.')
+      console.warn('[Puck] Cannot show without a position')
       return
     }
+    if (this.isVisible) return
 
-    if (this.isVisible) {
-      return // Already visible
-    }
-
-    // Create the marker if it doesn't exist
-    if (!this.marker) {
-      this.createMarker()
-    }
-
-    // Add group to map
+    if (!this.marker) this.createMarker()
     this.map.addObject(this.group)
     this.isVisible = true
   }
 
-  /**
-   * Hide and remove the puck from the map
-   */
+  /** Hide and remove the puck from the map */
   hide(): void {
-    if (!this.isVisible) {
-      return
-    }
-
+    if (!this.isVisible) return
     this.map.removeObject(this.group)
     this.isVisible = false
   }
 
-  /**
-   * Update the puck's position and optionally heading
-   * This is the main method for live navigation updates
-   */
+  /** Update the puck position and heading */
   setPosition(position: PuckPosition): void {
     this.currentPosition = position
+    if (!this.marker) return
 
-    if (!this.marker) {
-      // Marker not created yet, position will be used when show() is called
-      return
-    }
-
-    // Update marker geometry
     this.marker.setGeometry({ lat: position.lat, lng: position.lng })
-
-    // Update heading rotation if using DOM marker
     if (this.options.useDomMarker && this.domElement && position.heading !== undefined) {
       this.updateHeadingRotation(position.heading)
     }
   }
 
-  /**
-   * Get the current puck position
-   */
+  /** Get the current puck position */
   getPosition(): PuckPosition | null {
     return this.currentPosition
   }
 
-  /**
-   * Check if the puck is currently visible on the map
-   */
+  /** Check if the puck is visible on the map */
   isOnMap(): boolean {
     return this.isVisible
   }
 
-  /**
-   * Update puck options (will recreate marker if needed)
-   */
+  /** Update puck styling options */
   setOptions(options: Partial<PuckOptions>): void {
     const needsRecreate =
       options.useDomMarker !== undefined && options.useDomMarker !== this.options.useDomMarker
@@ -136,18 +80,13 @@ export class Puck {
       this.group.removeAll()
       this.marker = null
       this.domElement = null
-      if (this.isVisible) {
-        this.createMarker()
-      }
+      if (this.isVisible) this.createMarker()
     } else if (this.domElement) {
-      // Update styles without recreating
       this.applyDomStyles()
     }
   }
 
-  /**
-   * Clean up and dispose of all resources
-   */
+  /** Clean up and dispose of all resources */
   dispose(): void {
     this.hide()
     this.group.removeAll()
@@ -156,25 +95,13 @@ export class Puck {
     this.currentPosition = null
   }
 
-  /**
-   * Get the underlying HERE map group for advanced usage
-   */
+  /** Get the underlying HERE map group */
   getGroup(): H.map.Group {
     return this.group
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Private Methods
-  // ───────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Create the puck marker (DOM or regular)
-   */
   private createMarker(): void {
-    if (!this.currentPosition) {
-      return
-    }
-
+    if (!this.currentPosition) return
     const position = { lat: this.currentPosition.lat, lng: this.currentPosition.lng }
 
     if (this.options.useDomMarker) {
@@ -183,22 +110,14 @@ export class Puck {
       this.createCanvasMarker(position)
     }
 
-    if (this.marker) {
-      this.group.addObject(this.marker)
-    }
+    if (this.marker) this.group.addObject(this.marker)
   }
 
-  /**
-   * Create a DOM-based marker for rich styling and animations
-   */
   private createDomMarker(position: H.geo.IPoint): void {
-    // Create the puck DOM element
     this.domElement = this.createPuckElement()
 
-    // Create DomIcon with the element
     const icon = new H.map.DomIcon(this.domElement, {
       onAttach: (clonedElement) => {
-        // Store reference to the cloned element for updates
         this.domElement = clonedElement
         if (this.currentPosition?.heading !== undefined) {
           this.updateHeadingRotation(this.currentPosition.heading)
@@ -206,41 +125,23 @@ export class Puck {
       },
     })
 
-    // Create DomMarker
-    this.marker = new H.map.DomMarker(position, {
-      icon,
-      zIndex: this.options.zIndex,
-    })
+    this.marker = new H.map.DomMarker(position, { icon, zIndex: this.options.zIndex })
   }
 
-  /**
-   * Create a canvas-based marker (simpler but less customizable)
-   */
   private createCanvasMarker(position: H.geo.IPoint): void {
     const { size, primaryColor, borderColor } = this.options
-
-    // Create SVG icon
     const svg = this.createPuckSvg(size, primaryColor, borderColor)
     const icon = new H.map.Icon(svg, {
       size: { w: size, h: size },
       anchor: { x: size / 2, y: size / 2 },
     })
-
-    // Create Marker
-    this.marker = new H.map.Marker(position, {
-      icon,
-      zIndex: this.options.zIndex,
-    })
+    this.marker = new H.map.Marker(position, { icon, zIndex: this.options.zIndex })
   }
 
-  /**
-   * Create the puck DOM element with all styling
-   */
   private createPuckElement(): HTMLElement {
     const { size, primaryColor, borderColor, showHeading, showAccuracyRing, accuracyRingColor } =
       this.options
 
-    // Container element
     const container = document.createElement('div')
     container.className = 'here-puck'
     container.style.cssText = `
@@ -253,11 +154,10 @@ export class Puck {
       transform: translate(-50%, -50%);
     `
 
-    // Accuracy ring (optional)
     if (showAccuracyRing) {
-      const accuracyRing = document.createElement('div')
-      accuracyRing.className = 'here-puck-accuracy'
-      accuracyRing.style.cssText = `
+      const ring = document.createElement('div')
+      ring.className = 'here-puck-accuracy'
+      ring.style.cssText = `
         position: absolute;
         width: ${size * 1.8}px;
         height: ${size * 1.8}px;
@@ -265,14 +165,13 @@ export class Puck {
         background: ${accuracyRingColor};
         animation: here-puck-pulse 2s ease-in-out infinite;
       `
-      container.appendChild(accuracyRing)
+      container.appendChild(ring)
     }
 
-    // Heading indicator (optional arrow/cone)
     if (showHeading) {
-      const headingIndicator = document.createElement('div')
-      headingIndicator.className = 'here-puck-heading'
-      headingIndicator.style.cssText = `
+      const heading = document.createElement('div')
+      heading.className = 'here-puck-heading'
+      heading.style.cssText = `
         position: absolute;
         width: 0;
         height: 0;
@@ -284,10 +183,9 @@ export class Puck {
         opacity: 0.9;
         transition: transform 0.3s ease-out;
       `
-      container.appendChild(headingIndicator)
+      container.appendChild(heading)
     }
 
-    // Main puck circle
     const puck = document.createElement('div')
     puck.className = 'here-puck-dot'
     puck.style.cssText = `
@@ -302,9 +200,7 @@ export class Puck {
     `
     container.appendChild(puck)
 
-    // Inner highlight
     const highlight = document.createElement('div')
-    highlight.className = 'here-puck-highlight'
     highlight.style.cssText = `
       position: absolute;
       top: 20%;
@@ -316,15 +212,10 @@ export class Puck {
     `
     puck.appendChild(highlight)
 
-    // Add CSS animation keyframes if not already present
     this.injectAnimationStyles()
-
     return container
   }
 
-  /**
-   * Create SVG for canvas-based puck icon
-   */
   private createPuckSvg(size: number, fill: string, stroke: string): string {
     return `
       <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
@@ -336,12 +227,8 @@ export class Puck {
     `
   }
 
-  /**
-   * Apply DOM styles (for updates without recreation)
-   */
   private applyDomStyles(): void {
     if (!this.domElement) return
-
     const puckDot = this.domElement.querySelector('.here-puck-dot') as HTMLElement
     if (puckDot) {
       puckDot.style.background = this.options.primaryColor
@@ -351,96 +238,55 @@ export class Puck {
     }
   }
 
-  /**
-   * Update heading rotation on the DOM element
-   */
   private updateHeadingRotation(heading: number): void {
     if (!this.domElement) return
-
     const headingEl = this.domElement.querySelector('.here-puck-heading') as HTMLElement
-    if (headingEl) {
-      headingEl.style.transform = `rotate(${heading}deg)`
-    }
+    if (headingEl) headingEl.style.transform = `rotate(${heading}deg)`
   }
 
-  /**
-   * Inject CSS animation keyframes for pulsing effect
-   */
   private injectAnimationStyles(): void {
     const styleId = 'here-puck-animations'
-    if (document.getElementById(styleId)) {
-      return // Already injected
-    }
+    if (document.getElementById(styleId)) return
 
     const style = document.createElement('style')
     style.id = styleId
     style.textContent = `
       @keyframes here-puck-pulse {
-        0%, 100% {
-          transform: scale(1);
-          opacity: 0.6;
-        }
-        50% {
-          transform: scale(1.15);
-          opacity: 0.3;
-        }
+        0%, 100% { transform: scale(1); opacity: 0.6; }
+        50% { transform: scale(1.15); opacity: 0.3; }
       }
     `
     document.head.appendChild(style)
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Singleton / Convenience Functions
-// ─────────────────────────────────────────────────────────────────────────────
-
 let defaultPuck: Puck | null = null
 
-/**
- * Initialize the default puck instance
- * Call this once after creating your map
- */
+/** Initialize the default puck singleton */
 export function initPuck(map: H.Map, options?: PuckOptions): Puck {
-  if (defaultPuck) {
-    defaultPuck.dispose()
-  }
+  if (defaultPuck) defaultPuck.dispose()
   defaultPuck = new Puck(map, options)
   return defaultPuck
 }
 
-/**
- * Update puck position (convenience function)
- */
+/** Update the default puck position */
 export function updatePuckPosition(position: PuckPosition): void {
-  if (!defaultPuck) {
-    throw new Error('[Puck] Not initialized. Call initPuck(map) first.')
-  }
+  if (!defaultPuck) throw new Error('[Puck] Not initialized')
   defaultPuck.setPosition(position)
 }
 
-/**
- * Show the puck on the map
- */
+/** Show the default puck on the map */
 export function showPuck(initialPosition?: PuckPosition): void {
-  if (!defaultPuck) {
-    throw new Error('[Puck] Not initialized. Call initPuck(map) first.')
-  }
+  if (!defaultPuck) throw new Error('[Puck] Not initialized')
   defaultPuck.show(initialPosition)
 }
 
-/**
- * Hide the puck from the map
- */
+/** Hide the default puck from the map */
 export function hidePuck(): void {
-  if (!defaultPuck) {
-    return // Nothing to hide
-  }
-  defaultPuck.hide()
+  defaultPuck?.hide()
 }
 
-/**
- * Dispose of the default puck
- */
+/** Dispose of the default puck */
 export function disposePuck(): void {
   if (defaultPuck) {
     defaultPuck.dispose()

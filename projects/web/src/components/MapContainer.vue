@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 
-import { registerMap, unregisterMap } from '@/stores/mapStore'
+import { useMapStore } from '@/stores/mapStore'
+import { useDebugOverlay } from '@/composables/useDebugOverlay'
 import { createMap, type MapInstance } from '@/lib/here-sdk'
 
 const mapContainer = ref<HTMLDivElement>()
+const mapStore = useMapStore()
+const debug = useDebugOverlay()
+
 let mapInstance: MapInstance | null = null
 
 onMounted(() => {
@@ -18,22 +22,19 @@ onMounted(() => {
     showControls: false,
   })
 
-  // Register map with store for route rendering
-  registerMap(mapInstance)
+  mapStore.register(mapInstance)
+  debug.init(mapInstance.map)
 })
 
 onUnmounted(() => {
-  // Unregister from store first
-  unregisterMap()
-
+  debug.dispose()
+  mapStore.unregister()
   mapInstance?.dispose()
   mapInstance = null
 })
 
-// Expose map instance for parent components
 defineExpose({
   getMap: () => mapInstance?.map,
-  getInstance: () => mapInstance,
 })
 </script>
 
@@ -49,9 +50,5 @@ defineExpose({
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow:
-    0 4px 6px -1px rgb(0 0 0 / 0.1),
-    0 2px 4px -2px rgb(0 0 0 / 0.1),
-    0 0 0 1px rgb(255 255 255 / 0.05);
 }
 </style>
