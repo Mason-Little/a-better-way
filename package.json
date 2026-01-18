@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "prepare:docker": "bash scripts/prepare-docker.sh",
-    "dev:services": "pnpm prepare:docker && docker compose -f services/api/docker-compose.yml up --build",
+    "dev:services": "pnpm prepare:docker && docker compose -f database/docker-compose.yml up -d && docker compose -f services/streetview/docker-compose.yml up -d && docker compose -f services/api/docker-compose.yml up --build",
     "dev:web": "turbo run dev --filter=@a-better-way/web",
     "dev": "concurrently \"pnpm dev:services\" \"pnpm dev:web\"",
     "build": "turbo run build",

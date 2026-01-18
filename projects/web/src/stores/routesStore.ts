@@ -9,7 +9,7 @@ import type { Route } from '@/entities'
 import { useAvoidanceStore } from '@/stores/avoidanceStore'
 import { useMapStore } from '@/stores/mapStore'
 import { evaluateRoutes } from '@/utils/evaluation'
-import { findStopSigns } from '@/utils/stoplight/finder'
+import { findStopSigns } from '@/utils/stop-sign/finder'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared State
@@ -130,8 +130,8 @@ function setRoutes(newRoutes: Route[]): boolean {
   findStopSigns(addedRoutes).then((results) => {
     if (results.length > 0) {
       console.log(`[RoutesStore] Found ${results.length} stop signs`)
-      const { addStopSignBoxes } = useAvoidanceStore()
-      addStopSignBoxes(results.map((r) => r.avoidZone))
+      const { addStopSigns } = useAvoidanceStore()
+      addStopSigns(results.map((r) => r.stopSign))
     }
   })
 

@@ -1,13 +1,7 @@
 import type { Route, RouteAction, RoutePoint, StopSignResult } from '@/entities'
 import { useAvoidanceStore } from '@/stores/avoidanceStore'
-import {
-  calculateBearing,
-  createBoundingBox,
-  decodePolyline,
-  getBoundingBoxKey,
-  getPointBehind,
-  isPointInBoundingBox,
-} from '@/utils/geo'
+import { calculateBearing, calculateDistance, decodePolyline, getPointBehind } from '@/utils/geo'
+import { detectStopSign } from '@/utils/stop-sign/stop-sign-recognition'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Turn Detection Helpers
@@ -27,49 +21,47 @@ function isSharpLeftTurn(action: RouteAction): boolean {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function checkForStopSignAtPoint(point: RoutePoint, heading: number): Promise<boolean> {
-  const { detectStopSignCached } = useAvoidanceStore()
-  return await detectStopSignCached(point, heading)
+  return await detectStopSign(point, heading)
 }
 
 async function findStopSignsForRoute(route: Route): Promise<StopSignResult[]> {
   const polylinePoints = decodePolyline(route.sections[0]?.polyline ?? '')
   const turnByTurnActions = route.sections[0]?.turnByTurnActions
   const stopSignResults: StopSignResult[] = []
-  const { stopSignBoxes } = useAvoidanceStore()
+  const { stopSigns } = useAvoidanceStore()
 
   if (!turnByTurnActions) return []
 
-  const checkPromises = turnByTurnActions.map(async (action, index) => {
+  for (const [index, action] of turnByTurnActions.entries()) {
     if (isSharpLeftTurn(action)) {
       const turnPoint = polylinePoints[action.offset]
 
-      // valid point check
-      if (!turnPoint) return null
+      if (!turnPoint) continue
 
-      // Check if we already have a stop sign at this location (avoid redundant API calls)
-      const isKnown = stopSignBoxes.value.some((box) => isPointInBoundingBox(turnPoint, box))
-      if (isKnown) return null
+      // Check if we already have a stop sign at this location
+      // Also check against locally accumulated results to avoid duplicate calls within this same run
+      const isKnown =
+        stopSigns.value.some((sign) => calculateDistance(sign, turnPoint) < 20) ||
+        stopSignResults.some((res) => calculateDistance(res.stopSign, turnPoint) < 20)
+
+      if (isKnown) continue
 
       const lastPoint = polylinePoints[action.offset - 1]
-      if (!lastPoint) return null
+      if (!lastPoint) continue
 
       const heading = calculateBearing(turnPoint, lastPoint)
       const offsetPoint = getPointBehind(turnPoint, heading, 40)
-      if (!offsetPoint) return null
+      if (!offsetPoint) continue
 
-      const stopSign = await checkForStopSignAtPoint(offsetPoint, heading)
-      if (stopSign) {
-        return { avoidZone: createBoundingBox(turnPoint, 20), actionIndex: index }
+      const stopSignDetected = await checkForStopSignAtPoint(offsetPoint, heading)
+      if (stopSignDetected) {
+        stopSignResults.push({
+          stopSign: { lat: turnPoint.lat, lng: turnPoint.lng, heading },
+          actionIndex: index,
+        })
       }
     }
-    return null
-  })
-
-  const results = await Promise.all(checkPromises)
-
-  results.forEach((result) => {
-    if (result) stopSignResults.push(result)
-  })
+  }
 
   return stopSignResults
 }
@@ -80,20 +72,28 @@ async function findStopSignsForRoute(route: Route): Promise<StopSignResult[]> {
 
 /**
  * Find stop signs across multiple routes
- * Deduplicates results by bounding box center point
+ * Sequentially checks routes to avoid hammering the API
  */
 export async function findStopSigns(routes: Route[]): Promise<StopSignResult[]> {
-  const results = await Promise.all(routes.map((route) => findStopSignsForRoute(route)))
-  const allResults = results.flat()
+  const allResults: StopSignResult[] = []
 
-  // Deduplicate by bounding box center point
-  const seen = new Set<string>()
-  const deduped = allResults.filter((result) => {
-    const key = getBoundingBoxKey(result.avoidZone)
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  for (const route of routes) {
+    const results = await findStopSignsForRoute(route)
+    allResults.push(...results)
+  }
+
+  // Deduplicate by proximity
+  const deduped: StopSignResult[] = []
+
+  for (const result of allResults) {
+    const isDuplicate = deduped.some(
+      (existing) => calculateDistance(existing.stopSign, result.stopSign) < 20,
+    )
+
+    if (!isDuplicate) {
+      deduped.push(result)
+    }
+  }
 
   console.log(`[StopSignFinder] Deduplicated ${allResults.length} → ${deduped.length} stop signs`)
   return deduped

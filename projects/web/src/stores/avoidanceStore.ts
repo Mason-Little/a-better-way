@@ -3,12 +3,19 @@
  * Manages traffic segments, stop signs, and avoidance caching using a singleton state pattern.
  */
 
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import type { BoundingBox, FlowResponse, PrioritizedSegment, Route, RoutePoint } from '@/entities'
+import type {
+  BoundingBox,
+  FlowResponse,
+  PrioritizedSegment,
+  Route,
+  RoutePoint,
+  StopSign,
+} from '@/entities'
 import { useMapStore } from '@/stores/mapStore'
-import { getBoundingBoxKey } from '@/utils/geo/bounding-box'
-import { detectStopSign } from '@/utils/stoplight/stop-sign-recognition'
+import { createBoundingBox } from '@/utils/geo'
+import { detectStopSign } from '@/utils/stop-sign/stop-sign-recognition'
 import { findMatchingSegments } from '@/utils/traffic/matcher'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,8 +25,13 @@ import { findMatchingSegments } from '@/utils/traffic/matcher'
 /** Accumulated traffic segments to avoid (with priority info) */
 const trafficSegments = ref<PrioritizedSegment[]>([])
 
-/** Accumulated stop sign bounding boxes to avoid */
-const stopSignBoxes = ref<BoundingBox[]>([])
+/** Accumulated stop signs to avoid */
+const stopSigns = ref<StopSign[]>([])
+
+/** Accumulated stop sign bounding boxes to avoid (computed on demand) */
+const stopSignBoxes = computed<BoundingBox[]>(() =>
+  stopSigns.value.map((s) => createBoundingBox(s, 20)),
+)
 
 /** Bounding box covering all cached traffic data */
 const trafficCoverageBbox = ref<BoundingBox | null>(null)
@@ -27,50 +39,23 @@ const trafficCoverageBbox = ref<BoundingBox | null>(null)
 /** Cached traffic flow response */
 const cachedTrafficFlow = ref<FlowResponse | null>(null)
 
-/** Stop sign detection cache (lat,lng key -> boolean) */
-const stopSignCache = ref<Map<string, boolean>>(new Map())
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Cache Key Generation
 // ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Generate cache key from coordinates with precision rounding
- */
-function getCoordinateCacheKey(lat: number, lng: number, precision = 5): string {
-  const roundedLat = lat.toFixed(precision)
-  const roundedLng = lng.toFixed(precision)
-  return `${roundedLat},${roundedLng}`
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Actions
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Detect stop sign with caching
+ * Detect stop sign
  */
 async function detectStopSignCached(
   point: RoutePoint,
   heading: number,
   conf = 0.25,
 ): Promise<boolean> {
-  const cacheKey = getCoordinateCacheKey(point.lat, point.lng)
-
-  // Check cache first
-  if (stopSignCache.value.has(cacheKey)) {
-    const cached = stopSignCache.value.get(cacheKey)!
-    console.log(`Cache hit for ${cacheKey}`)
-    return cached
-  }
-
-  // Cache miss - call API
-  const result = await detectStopSign(point, heading, conf)
-
-  // Store in cache
-  stopSignCache.value.set(cacheKey, result)
-
-  return result
+  return await detectStopSign(point, heading, conf)
 }
 
 /**
@@ -85,15 +70,16 @@ function addTrafficSegments(segments: PrioritizedSegment[]) {
 }
 
 /**
- * Add stop sign bounding boxes to avoid (merges with existing, dedupes by coordinates)
+ * Add stop signs to avoid (merges with existing, dedupes by coordinates)
  */
-function addStopSignBoxes(boxes: BoundingBox[]) {
-  const existingKeys = new Set(stopSignBoxes.value.map((b) => getBoundingBoxKey(b)))
-  const newBoxes = boxes.filter((b) => !existingKeys.has(getBoundingBoxKey(b)))
+function addStopSigns(signs: StopSign[]) {
+  // Simple deduplication by coordinate string (exact match)
+  const existingKeys = new Set(stopSigns.value.map((s) => `${s.lat},${s.lng}`))
+  const newSigns = signs.filter((s) => !existingKeys.has(`${s.lat},${s.lng}`))
 
-  if (newBoxes.length === 0) return
+  if (newSigns.length === 0) return
 
-  stopSignBoxes.value.push(...newBoxes)
+  stopSigns.value.push(...newSigns)
   const { drawStopSigns } = useMapStore()
   drawStopSigns(stopSignBoxes.value)
 }
@@ -143,7 +129,7 @@ function getCleanedSegments(maxSegments = 250, routes: Route[] = []): string[] {
  */
 function clearAvoidZones() {
   trafficSegments.value = []
-  stopSignBoxes.value = []
+  stopSigns.value = []
   const { clearTrafficSegments, clearStopSigns } = useMapStore()
   clearTrafficSegments()
   clearStopSigns()
@@ -195,7 +181,6 @@ function clearTrafficCache(): void {
 function clearAll(): void {
   clearAvoidZones()
   clearTrafficCache()
-  stopSignCache.value.clear()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -209,15 +194,15 @@ export function useAvoidanceStore() {
   return {
     // State
     trafficSegments,
+    stopSigns,
     stopSignBoxes,
     trafficCoverageBbox,
     cachedTrafficFlow,
-    stopSignCache,
 
     // Actions
     detectStopSignCached,
     addTrafficSegments,
-    addStopSignBoxes,
+    addStopSigns,
     getCleanedSegments,
     clearAvoidZones,
     getTrafficCoverageBbox,

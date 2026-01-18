@@ -9,20 +9,6 @@ import { getLngDegPerMeter, LAT_DEG_PER_METER } from './constants'
 import { decodePolyline } from './polyline'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Bounding Box Key Generation
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Generate a unique key for a bounding box based on its center point coordinates.
- * Uses 4 decimal places (~10m accuracy) to handle floating point variations.
- */
-export function getBoundingBoxKey(box: BoundingBox): string {
-  const centerLat = ((box.north + box.south) / 2).toFixed(4)
-  const centerLng = ((box.east + box.west) / 2).toFixed(4)
-  return `${centerLat},${centerLng}`
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Bounding Box Creation
 // ─────────────────────────────────────────────────────────────────────────────
 

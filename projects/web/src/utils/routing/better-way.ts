@@ -3,7 +3,7 @@ import { useAvoidanceStore } from '@/stores/avoidanceStore'
 import { useRoutesStore } from '@/stores/routesStore'
 import { calculateRoute } from '@/lib/here-sdk'
 import { formatBoundingBox } from '@/utils/geo'
-import { findStopSigns } from '@/utils/stoplight'
+import { findStopSigns } from '@/utils/stop-sign'
 import { findTrafficAvoidance } from '@/utils/traffic'
 
 async function findInitialRoutes(start: RoutePoint, end: RoutePoint) {
@@ -72,7 +72,7 @@ export async function getBetterWayRoutes(
   jamThreshold: number,
 ) {
   const { setRoutes, evaluateAllRoutes } = useRoutesStore()
-  const { clearAll, addTrafficSegments, addStopSignBoxes, getCleanedSegments, stopSignBoxes } =
+  const { clearAll, addTrafficSegments, addStopSigns, getCleanedSegments, stopSignBoxes } =
     useAvoidanceStore()
 
   // Clear any previous avoid zones and traffic cache
@@ -121,11 +121,11 @@ export async function getBetterWayRoutes(
     console.log(
       `[BetterWay] Found ${trafficSegments.length} traffic segments | ${stopSignResults.length} stop signs`,
     )
-    const newStopSignBoxes = stopSignResults.map((r) => r.avoidZone)
+    const newStopSigns = stopSignResults.map((r) => r.stopSign)
 
     // Add to store (deduplication handled by store)
     addTrafficSegments(trafficSegments)
-    addStopSignBoxes(newStopSignBoxes)
+    addStopSigns(newStopSigns)
 
     // Calculate new routes avoiding accumulated zones
     const improvedRoutes = await calculateBetterRoute(start, end, {
