@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.turbo
 .DS_Store
 dist
 dist-ssr
@@ -45,3 +46,4 @@ playwright-report/
 
 # Private services
 services/streetview/
+

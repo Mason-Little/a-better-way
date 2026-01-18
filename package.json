@@ -1,14 +1,18 @@
 {
   "name": "a-better-way-monorepo",
+  "packageManager": "pnpm@10.16.1",
   "private": true,
   "scripts": {
-    "dev-up": "bash scripts/ci/up.sh",
-    "dev": "bash scripts/ci/start.sh",
-    "build": "pnpm --filter @a-better-way/web build",
-    "test": "pnpm --filter @a-better-way/web test",
-    "lint": "pnpm --filter @a-better-way/web lint"
+    "prepare:docker": "bash scripts/prepare-docker.sh",
+    "dev:services": "pnpm prepare:docker && docker compose -f services/api/docker-compose.yml up --build",
+    "dev:web": "turbo run dev --filter=@a-better-way/web",
+    "dev": "concurrently \"pnpm dev:services\" \"pnpm dev:web\"",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "turbo": "^2.7.5"
   }
 }
