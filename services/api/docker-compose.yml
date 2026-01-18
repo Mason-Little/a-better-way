@@ -1,6 +1,8 @@
 services:
   stopsign-detector:
-    build: .
+    build:
+      context: ../..
+      dockerfile: services/api/Dockerfile
     ports:
       - "8000:8000"
     env_file:

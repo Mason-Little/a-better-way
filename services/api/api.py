@@ -7,7 +7,10 @@ import os
 import aiohttp
 from ultralytics import YOLO
 
+from prisma import Prisma
+
 app = FastAPI(title="Stop Sign Detector API")
+prisma = Prisma()
 
 # Add CORS middleware
 app.add_middleware(
@@ -17,6 +20,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup():
+    await prisma.connect()
+
+@app.on_event("shutdown")
+async def shutdown():
+    if prisma.is_connected():
+        await prisma.disconnect()
 
 # Load model once at startup
 model = YOLO("model/vision-model-detect-001.pt")
@@ -40,7 +52,28 @@ class DetectionResponse(BaseModel):
 async def detect_stop_sign(request: DetectionRequest):
     """Detect if there's a stop sign at the given location and heading."""
     
-    # Call Street View Service
+        
+    # Rounding to 5 decimal places for cache key consistency
+    lat_key = round(request.lat, 5)
+    lon_key = round(request.lon, 5)
+
+    cached = await prisma.detection.find_first(
+        where={
+            "lat": lat_key,
+            "lon": lon_key,
+            "heading": request.heading 
+        }
+    )
+
+    if cached:
+        return DetectionResponse(
+            lat=request.lat,
+            lon=request.lon,
+            heading=request.heading,
+            stop_sign_detected=cached.detected
+        )
+    
+    # Cache Miss - Call Street View Service
     async with aiohttp.ClientSession() as session:
         payload = {
             "lat": request.lat,
@@ -75,6 +108,16 @@ async def detect_stop_sign(request: DetectionRequest):
             if int(box.cls) == 0:
                 has_stop_sign = True
                 break
+    
+    # Save to Cache (Database)
+    await prisma.detection.create(
+        data={
+            "lat": lat_key,
+            "lon": lon_key,
+            "heading": request.heading,
+            "detected": has_stop_sign
+        }
+    )
     
     return DetectionResponse(
         lat=request.lat,

@@ -13,13 +13,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt .
+COPY services/api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-
-COPY api.py .
-COPY model/ model/
+COPY services/api/api.py .
+COPY services/api/model/ model/
+COPY packages/database/prisma/schema.prisma schema.prisma
+RUN prisma generate --schema=schema.prisma
 
 # Expose API port
 EXPOSE 8000

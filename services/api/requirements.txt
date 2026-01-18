@@ -3,3 +3,4 @@ ultralytics
 aiohttp
 fastapi
 uvicorn
+prisma
